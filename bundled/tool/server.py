@@ -10,7 +10,7 @@ import os
 import pathlib
 import sys
 import traceback
-from typing import Any, Dict, List, Sequence, Union
+from typing import Any, Dict, Sequence
 
 
 # **********************************************************
@@ -157,6 +157,9 @@ def initialize(params: lsp.InitializeParams) -> None:
     paths = "\r\n   ".join(sys.path)
     log_to_output(f"sys.path used to run Server:\r\n   {paths}")
 
+    _workaround_for_autopep8_reload_issue()
+    log_to_output(f"PYTHONPATH env variable used to run Server:\r\n   {os.environ.get('PYTHONPATH', '')}")
+
     settings = params.initialization_options["settings"]
     _update_workspace_settings(settings)
     log_to_output(
@@ -227,12 +230,33 @@ def _log_version_info() -> None:
 # Internal functional and settings management APIs.
 # *****************************************************
 def _update_workspace_settings(settings):
+    if not settings:
+        key = os.getcwd()
+        WORKSPACE_SETTINGS[key] = {
+            "workspaceFS": key,
+            "workspace": uris.from_fs_path(key),
+            "logLevel": "error",
+            "path": [sys.executable, "-m", TOOL_MODULE],
+            "interpreter": [sys.executable],
+            "args": [],
+            "importStrategy": "useBundled",
+            "showNotifications": "off",
+        }
+        return
     for setting in settings:
         key = uris.to_fs_path(setting["workspace"])
         WORKSPACE_SETTINGS[key] = {
             **setting,
             "workspaceFS": key,
         }
+        if not WORKSPACE_SETTINGS[key]["path"]:
+            # workaround for reload issue with autopep8
+            # https://github.com/hhatto/autopep8/issues/625
+            WORKSPACE_SETTINGS[key]["path"] = [
+                sys.executable,
+                "-m",
+                TOOL_MODULE,
+            ]
 
 
 def _get_settings_by_document(document: workspace.Document | None):
@@ -250,6 +274,18 @@ def _get_settings_by_document(document: workspace.Document | None):
 
     return WORKSPACE_SETTINGS[str(document_workspace)]
 
+def _workaround_for_autopep8_reload_issue():
+    # workaround for reload issue with autopep8
+    # https://github.com/hhatto/autopep8/issues/625
+    lib_path = os.fspath(pathlib.Path(__file__).parent.parent / "libs")
+    python_path = os.environ.get('PYTHONPATH', '')
+    if os.getenv("LS_IMPORT_STRATEGY", "useBundled") == "useBundled":
+        os.environ.update(PYTHONPATH=lib_path + os.pathsep + python_path)
+    else:
+        try:
+            import autopep8  # noqa
+        except ImportError:
+            os.environ.update(PYTHONPATH=lib_path + os.pathsep + python_path)
 
 # *****************************************************
 # Internal execution APIs.

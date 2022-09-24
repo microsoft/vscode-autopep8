@@ -137,16 +137,16 @@ def lint(session: nox.Session) -> None:
     )
     session.run("flake8", "noxfile.py")
 
-    # check formatting using black
-    session.install("black")
-    session.run("black", "--check", "./bundled/tool")
-    session.run("black", "--check", "./src/test/python_tests")
-    session.run("black", "--check", "noxfile.py")
+    # check formatting using autopep8
+    session.install("autopep8")
+    session.run("autopep8", "--diff", "--exit-code", "--recursive", "./bundled/tool")
+    session.run("autopep8", "--diff", "--exit-code", "--recursive", "./src/test/python_tests")
+    session.run("autopep8", "--diff", "--exit-code", "noxfile.py")
 
     # check import sorting using isort
     session.install("isort")
     session.run("isort", "--check", "./bundled/tool")
-    session.run("isort", "--check", "./src/test/python_tests")
+    session.run("isort", "--check", "--skip", "sample.py", "./src/test/python_tests")
     session.run("isort", "--check", "noxfile.py")
 
     # check typescript code
