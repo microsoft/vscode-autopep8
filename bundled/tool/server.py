@@ -56,7 +56,7 @@ TOOL_DISPLAY = "autopep8"
 TOOL_ARGS = []
 
 # Minimum version of autopep8 supported.
-MIN_VERSION = "22.3.0"
+MIN_VERSION = "1.7.0"
 
 # **********************************************************
 # Formatting features start here

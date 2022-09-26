@@ -6,7 +6,7 @@ Note:
 
 -   This extension is supported for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the `python` language (i.e., python >= 3.7).
 -   The bundled `autopep8` is only used if there is no installed version of `autopep8` found in the selected `python` environment.
--   Minimum supported version of `autopep8` is `22.3.0`.
+-   Minimum supported version of `autopep8` is `1.7.0`.
 -   This extension is experimental. The plan is that it will eventually replace the `autopep8` formatting functionality of [the Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python).
 
 ## Usage
