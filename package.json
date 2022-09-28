@@ -41,7 +41,10 @@
     "activationEvents": [
         "onLanguage:python",
         "workspaceContains:pyproject.toml",
-        "workspaceContains:*.py",
+        "workspaceContains:setup.cfg",
+        "workspaceContains:tox.ini",
+        "workspaceContains:.pep8",
+        "workspaceContains:.flake8",
         "onCommand:autopep8.restart"
     ],
     "main": "./dist/extension.js",
