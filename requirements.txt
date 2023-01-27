@@ -4,17 +4,17 @@
 #
 #    pip-compile --generate-hashes ./requirements.in
 #
-autopep8==2.0.0 \
-    --hash=sha256:8b1659c7f003e693199f52caffdc06585bb0716900bbc6a7442fd931d658c077 \
-    --hash=sha256:ad924b42c2e27a1ac58e432166cc4588f5b80747de02d0d35b1ecbd3e7d57207
-    # via -r ./requirements.in
+autopep8==2.0.1 \
+    --hash=sha256:be5bc98c33515b67475420b7b1feafc8d32c1a69862498eda4983b45bffd2687 \
+    --hash=sha256:d27a8929d8dcd21c0f4b3859d2d07c6c25273727b98afc984c039df0f0d86566
+    # via -r requirements.in
 packaging==21.3 \
     --hash=sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb \
     --hash=sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522
-    # via -r ./requirements.in
-pycodestyle==2.9.1 \
-    --hash=sha256:2c9607871d58c76354b697b42f5d57e1ada7d261c261efac224b664affdc5785 \
-    --hash=sha256:d1735fc58b418fd7c5f658d28d943854f8a849b01a5d0a1e6f3f3fdd0166804b
+    # via -r requirements.in
+pycodestyle==2.10.0 \
+    --hash=sha256:347187bdb476329d98f695c213d7295a846d1152ff4fe9bacb8a9590b8ee7053 \
+    --hash=sha256:8a4eaf0d0495c7395bdab3589ac2db602797d76207242c17d470186815706610
     # via autopep8
 pydantic==1.10.2 \
     --hash=sha256:05e00dbebbe810b33c7a7362f231893183bcc4251f3f2ff991c31d5c08240c42 \
@@ -57,15 +57,11 @@ pydantic==1.10.2 \
 pygls==0.12.4 \
     --hash=sha256:1b96378452217a02f19d89d9e647a4256d8d445ab3c641a589b4f73bf11898b6 \
     --hash=sha256:63b859411307ed6f99fb9dd0e71be507a17ae9b3de5c5d07c497f5bddadcc46a
-    # via -r ./requirements.in
+    # via -r requirements.in
 pyparsing==3.0.9 \
     --hash=sha256:2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb \
     --hash=sha256:5026bae9a10eeaefb61dab2f09052b9f4307d44aee4eda64b309723d8d206bbc
     # via packaging
-tomli==2.0.1 \
-    --hash=sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc \
-    --hash=sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f
-    # via autopep8
 typeguard==2.13.3 \
     --hash=sha256:00edaa8da3a133674796cf5ea87d9f4b4c367d77476e185e80251cc13dfbb8c4 \
     --hash=sha256:5e3e3be01e887e7eafae5af63d1f36c849aaa94e3a0112097312aabfa16284f1
