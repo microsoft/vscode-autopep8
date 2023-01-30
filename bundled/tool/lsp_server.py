@@ -35,13 +35,13 @@ update_sys_path(
 # Imports needed for the language server goes below this.
 # **********************************************************
 # pylint: disable=wrong-import-position,import-error
-import jsonrpc
-import utils
+import lsp_jsonrpc as jsonrpc
+import lsp_utils as utils
 from lsprotocol import types as lsp
 from pygls import protocol, server, uris, workspace
 
 WORKSPACE_SETTINGS = {}
-RUNNER = pathlib.Path(__file__).parent / "runner.py"
+RUNNER = pathlib.Path(__file__).parent / "lsp_runner.py"
 
 MAX_WORKERS = 5
 LSP_SERVER = server.LanguageServer(name="autopep8-server", version="1.0.0", max_workers=MAX_WORKERS)
