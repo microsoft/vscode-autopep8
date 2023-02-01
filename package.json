@@ -44,8 +44,7 @@
         "workspaceContains:setup.cfg",
         "workspaceContains:tox.ini",
         "workspaceContains:.pep8",
-        "workspaceContains:.flake8",
-        "onCommand:autopep8.restart"
+        "workspaceContains:.flake8"
     ],
     "main": "./dist/extension.js",
     "scripts": {
