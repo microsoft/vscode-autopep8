@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationChangeEvent, WorkspaceFolder } from 'vscode';
+import { ConfigurationChangeEvent, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { getInterpreterDetails } from './python';
 import { LoggingLevelSettingType } from './log/types';
 import { getConfiguration, getWorkspaceFolders } from './vscodeapi';
@@ -60,9 +60,37 @@ export async function getWorkspaceSettings(
     return workspaceSetting;
 }
 
+function getGlobalValue<T>(config: WorkspaceConfiguration, key: string, defaultValue: T): T {
+    const inspect = config.inspect<T>(key);
+    return inspect?.globalValue ?? inspect?.defaultValue ?? defaultValue;
+}
+
+export async function getGlobalSettings(namespace: string, includeInterpreter?: boolean): Promise<ISettings> {
+    const config = getConfiguration(namespace);
+
+    let interpreter: string[] | undefined = [];
+    if (includeInterpreter) {
+        interpreter = getGlobalValue<string[]>(config, 'interpreter', []);
+        if (interpreter === undefined || interpreter.length === 0) {
+            interpreter = (await getInterpreterDetails()).path;
+        }
+    }
+
+    const setting = {
+        workspace: process.cwd(),
+        logLevel: getGlobalValue<LoggingLevelSettingType>(config, 'logLevel', 'error'),
+        args: getGlobalValue<string[]>(config, 'args', []),
+        path: getGlobalValue<string[]>(config, 'path', []),
+        interpreter: interpreter ?? [],
+        importStrategy: getGlobalValue<string>(config, 'importStrategy', 'fromEnvironment'),
+        showNotifications: getGlobalValue<string>(config, 'showNotifications', 'off'),
+    };
+    return setting;
+}
+
 export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespace: string): boolean {
     const settings = [
-        `${namespace}.trace`,
+        `${namespace}.logLevel`,
         `${namespace}.args`,
         `${namespace}.path`,
         `${namespace}.interpreter`,

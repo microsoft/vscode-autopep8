@@ -41,6 +41,7 @@ from lsprotocol import types as lsp
 from pygls import protocol, server, uris, workspace
 
 WORKSPACE_SETTINGS = {}
+GLOBAL_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "lsp_runner.py"
 
 MAX_WORKERS = 5
@@ -161,10 +162,15 @@ def initialize(params: lsp.InitializeParams) -> None:
     _workaround_for_autopep8_reload_issue()
     log_to_output(f"PYTHONPATH env variable used to run Server:\r\n   {os.environ.get('PYTHONPATH', '')}")
 
+    GLOBAL_SETTINGS.update(**params.initialization_options.get("globalSettings", {}))
+
     settings = params.initialization_options["settings"]
     _update_workspace_settings(settings)
     log_to_output(
         f"Settings used to run Server:\r\n{json.dumps(settings, indent=4, ensure_ascii=False)}\r\n"
+    )
+    log_to_output(
+        f"Global settings:\r\n{json.dumps(GLOBAL_SETTINGS, indent=4, ensure_ascii=False)}\r\n"
     )
 
     if isinstance(LSP_SERVER.lsp, protocol.LanguageServerProtocol):
@@ -230,18 +236,24 @@ def _log_version_info() -> None:
 # *****************************************************
 # Internal functional and settings management APIs.
 # *****************************************************
+def _get_global_defaults():
+    return {
+        "logLevel": GLOBAL_SETTINGS.get("logLevel", "error"),
+        "path": GLOBAL_SETTINGS.get("path", []),
+        "interpreter": GLOBAL_SETTINGS.get("interpreter", [sys.executable, "-m", TOOL_MODULE]),
+        "args": GLOBAL_SETTINGS.get("args", []),
+        "importStrategy": GLOBAL_SETTINGS.get("importStrategy", "useBundled"),
+        "showNotifications": GLOBAL_SETTINGS.get("showNotifications", "off"),
+    }
+
+
 def _update_workspace_settings(settings):
     if not settings:
         key = os.getcwd()
         WORKSPACE_SETTINGS[key] = {
             "workspaceFS": key,
             "workspace": uris.from_fs_path(key),
-            "logLevel": "error",
-            "path": [sys.executable, "-m", TOOL_MODULE],
-            "interpreter": [sys.executable],
-            "args": [],
-            "importStrategy": "useBundled",
-            "showNotifications": "off",
+            **_get_global_defaults(),
         }
         return
     for setting in settings:
@@ -260,20 +272,32 @@ def _update_workspace_settings(settings):
             ]
 
 
-def _get_settings_by_document(document: workspace.Document | None):
-    if len(WORKSPACE_SETTINGS) == 1 or document is None or document.path is None:
-        return list(WORKSPACE_SETTINGS.values())[0]
-
+def _get_document_key(document: workspace.Document):
     document_workspace = pathlib.Path(document.path)
     workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
 
-    # COMMENT: about non workspace files
     while document_workspace != document_workspace.parent:
         if str(document_workspace) in workspaces:
-            break
+            return str(document_workspace)
         document_workspace = document_workspace.parent
+    return None
 
-    return WORKSPACE_SETTINGS[str(document_workspace)]
+
+def _get_settings_by_document(document: workspace.Document | None):
+    if document is None or document.path is None:
+        return list(WORKSPACE_SETTINGS.values())[0]
+
+    key = _get_document_key(document)
+    if key is None:
+        key = os.fspath(pathlib.Path(document.path).parent)
+        return {
+            "workspaceFS": key,
+            "workspace": uris.from_fs_path(key),
+            **_get_global_defaults(),
+        }
+
+    return WORKSPACE_SETTINGS[str(key)]
+
 
 def _workaround_for_autopep8_reload_issue():
     # workaround for reload issue with autopep8
