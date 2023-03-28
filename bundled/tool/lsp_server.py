@@ -10,7 +10,7 @@ import os
 import pathlib
 import sys
 import traceback
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 
 # **********************************************************
@@ -38,9 +38,10 @@ update_sys_path(
 import lsp_jsonrpc as jsonrpc
 import lsp_utils as utils
 from lsprotocol import types as lsp
-from pygls import protocol, server, uris, workspace
+from pygls import server, uris, workspace
 
 WORKSPACE_SETTINGS = {}
+GLOBAL_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "lsp_runner.py"
 
 MAX_WORKERS = 5
@@ -161,27 +162,33 @@ def initialize(params: lsp.InitializeParams) -> None:
     _workaround_for_autopep8_reload_issue()
     log_to_output(f"PYTHONPATH env variable used to run Server:\r\n   {os.environ.get('PYTHONPATH', '')}")
 
+    GLOBAL_SETTINGS.update(**params.initialization_options.get("globalSettings", {}))
+
     settings = params.initialization_options["settings"]
     _update_workspace_settings(settings)
     log_to_output(
         f"Settings used to run Server:\r\n{json.dumps(settings, indent=4, ensure_ascii=False)}\r\n"
     )
+    log_to_output(
+        f"Global settings:\r\n{json.dumps(GLOBAL_SETTINGS, indent=4, ensure_ascii=False)}\r\n"
+    )
 
-    if isinstance(LSP_SERVER.lsp, protocol.LanguageServerProtocol):
-        if any(setting["logLevel"] == "debug" for setting in settings):
-            LSP_SERVER.lsp.trace = lsp.TraceValues.Verbose
-        elif any(
-            setting["logLevel"] in ["error", "warn", "info"] for setting in settings
-        ):
-            LSP_SERVER.lsp.trace = lsp.TraceValues.Messages
-        else:
-            LSP_SERVER.lsp.trace = lsp.TraceValues.Off
+
+
+    _log_version_info()
+
     _log_version_info()
 
 
 @LSP_SERVER.feature(lsp.EXIT)
-def on_exit():
+def on_exit(_params: Optional[Any] = None) -> None:
     """Handle clean up on exit."""
+    jsonrpc.shutdown_json_rpc()
+
+
+@LSP_SERVER.feature(lsp.SHUTDOWN)
+def on_shutdown(_params: Optional[Any] = None) -> None:
+    """Handle clean up on shutdown."""
     jsonrpc.shutdown_json_rpc()
 
 
@@ -230,20 +237,27 @@ def _log_version_info() -> None:
 # *****************************************************
 # Internal functional and settings management APIs.
 # *****************************************************
+def _get_global_defaults():
+    return {
+        "path": GLOBAL_SETTINGS.get("path", [sys.executable, "-m", TOOL_MODULE]),
+        "interpreter": GLOBAL_SETTINGS.get("interpreter", [sys.executable]),
+        "args": GLOBAL_SETTINGS.get("args", []),
+        "importStrategy": GLOBAL_SETTINGS.get("importStrategy", "useBundled"),
+        "showNotifications": GLOBAL_SETTINGS.get("showNotifications", "off"),
+    }
+
+
 def _update_workspace_settings(settings):
     if not settings:
         key = os.getcwd()
         WORKSPACE_SETTINGS[key] = {
+            "cwd": key,
             "workspaceFS": key,
             "workspace": uris.from_fs_path(key),
-            "logLevel": "error",
-            "path": [sys.executable, "-m", TOOL_MODULE],
-            "interpreter": [sys.executable],
-            "args": [],
-            "importStrategy": "useBundled",
-            "showNotifications": "off",
+            **_get_global_defaults(),
         }
         return
+
     for setting in settings:
         key = uris.to_fs_path(setting["workspace"])
         WORKSPACE_SETTINGS[key] = {
@@ -259,21 +273,49 @@ def _update_workspace_settings(settings):
                 TOOL_MODULE,
             ]
 
-
-def _get_settings_by_document(document: workspace.Document | None):
-    if len(WORKSPACE_SETTINGS) == 1 or document is None or document.path is None:
-        return list(WORKSPACE_SETTINGS.values())[0]
-
-    document_workspace = pathlib.Path(document.path)
+def _get_settings_by_path(file_path: pathlib.Path):
     workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
 
-    # COMMENT: about non workspace files
-    while document_workspace != document_workspace.parent:
-        if str(document_workspace) in workspaces:
-            break
-        document_workspace = document_workspace.parent
+    while file_path != file_path.parent:
+        str_file_path = str(file_path)
+        if str_file_path in workspaces:
+            return WORKSPACE_SETTINGS[str_file_path]
+        file_path = file_path.parent
 
-    return WORKSPACE_SETTINGS[str(document_workspace)]
+    setting_values = list(WORKSPACE_SETTINGS.values())
+    return setting_values[0]
+
+
+def _get_document_key(document: workspace.Document):
+    if WORKSPACE_SETTINGS:
+        document_workspace = pathlib.Path(document.path)
+        workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
+
+        # Find workspace settings for the given file.
+        while document_workspace != document_workspace.parent:
+            if str(document_workspace) in workspaces:
+                return str(document_workspace)
+            document_workspace = document_workspace.parent
+
+    return None
+
+
+def _get_settings_by_document(document: workspace.Document | None):
+    if document is None or document.path is None:
+        return list(WORKSPACE_SETTINGS.values())[0]
+
+    key = _get_document_key(document)
+    if key is None:
+        # This is either a non-workspace file or there is no workspace.
+        key = os.fspath(pathlib.Path(document.path).parent)
+        return {
+            "cwd": key,
+            "workspaceFS": key,
+            "workspace": uris.from_fs_path(key),
+            **_get_global_defaults(),
+        }
+
+    return WORKSPACE_SETTINGS[str(key)]
 
 def _workaround_for_autopep8_reload_issue():
     # workaround for reload issue with autopep8
@@ -287,6 +329,7 @@ def _workaround_for_autopep8_reload_issue():
             import autopep8  # noqa
         except ImportError:
             os.environ.update(PYTHONPATH=lib_path + os.pathsep + python_path)
+
 
 # *****************************************************
 # Internal execution APIs.
@@ -314,7 +357,7 @@ def _run_tool_on_document(
     settings = copy.deepcopy(_get_settings_by_document(document))
 
     code_workspace = settings["workspaceFS"]
-    cwd = settings["workspaceFS"]
+    cwd = settings["cwd"]
 
     use_path = False
     use_rpc = False
@@ -394,7 +437,7 @@ def _run_tool_on_document(
 def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunResult:
     """Runs tool."""
     code_workspace = settings["workspaceFS"]
-    cwd = settings["workspaceFS"]
+    cwd = settings["cwd"]
 
     use_path = False
     use_rpc = False
