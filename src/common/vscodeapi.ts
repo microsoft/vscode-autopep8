@@ -7,16 +7,20 @@ import {
     commands,
     ConfigurationScope,
     Disposable,
-    OutputChannel,
+    DocumentFormattingEditProvider,
+    languages,
+    LanguageStatusItem,
+    LogOutputChannel,
     Uri,
     window,
     workspace,
     WorkspaceConfiguration,
     WorkspaceFolder,
 } from 'vscode';
+import { DocumentSelector } from 'vscode-languageclient';
 
-export function createOutputChannel(name: string): OutputChannel {
-    return window.createOutputChannel(name);
+export function createOutputChannel(name: string): LogOutputChannel {
+    return window.createOutputChannel(name, { log: true });
 }
 
 export function getConfiguration(config: string, scope?: ConfigurationScope): WorkspaceConfiguration {
@@ -40,4 +44,26 @@ export function getWorkspaceFolders(): readonly WorkspaceFolder[] {
 
 export function getWorkspaceFolder(uri: Uri): WorkspaceFolder | undefined {
     return workspace.getWorkspaceFolder(uri);
+}
+
+export function registerDocumentFormattingEditProvider(
+    selector: DocumentSelector,
+    provider: DocumentFormattingEditProvider,
+): Disposable {
+    return languages.registerDocumentFormattingEditProvider(selector, provider);
+}
+
+export function createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem {
+    return languages.createLanguageStatusItem(id, selector);
+}
+
+export function getDocumentSelector(): DocumentSelector {
+    return isVirtualWorkspace()
+        ? [{ language: 'python' }]
+        : [
+              { scheme: 'file', language: 'python' },
+              { scheme: 'untitled', language: 'python' },
+              { scheme: 'vscode-notebook', language: 'python' },
+              { scheme: 'vscode-notebook-cell', language: 'python' },
+          ];
 }

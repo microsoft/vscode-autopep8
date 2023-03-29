@@ -10,21 +10,21 @@ attrs==22.2.0 \
     # via
     #   cattrs
     #   lsprotocol
-autopep8==2.0.1 \
-    --hash=sha256:be5bc98c33515b67475420b7b1feafc8d32c1a69862498eda4983b45bffd2687 \
-    --hash=sha256:d27a8929d8dcd21c0f4b3859d2d07c6c25273727b98afc984c039df0f0d86566
+autopep8==2.0.2 \
+    --hash=sha256:86e9303b5e5c8160872b2f5ef611161b2893e9bfe8ccc7e2f76385947d57a2f1 \
+    --hash=sha256:f9849cdd62108cb739dbcdbfb7fdcc9a30d1b63c4cc3e1c1f893b5360941b61c
     # via -r ./requirements.in
 cattrs==22.2.0 \
     --hash=sha256:bc12b1f0d000b9f9bee83335887d532a1d3e99a833d1bf0882151c97d3e68c21 \
     --hash=sha256:f0eed5642399423cf656e7b66ce92cdc5b963ecafd041d1b24d136fdde7acf6d
     # via lsprotocol
-exceptiongroup==1.1.0 \
-    --hash=sha256:327cbda3da756e2de031a3107b81ab7b3770a602c4d16ca618298c526f4bec1e \
-    --hash=sha256:bcb67d800a4497e1b404c2dd44fca47d3b7a5e5433dbab67f96c1a685cdfdf23
+exceptiongroup==1.1.1 \
+    --hash=sha256:232c37c63e4f682982c8b6459f33a8981039e5fb8756b2074364e5055c498c9e \
+    --hash=sha256:d484c3090ba2889ae2928419117447a14daf3c1231d5e30d0aae34f354f01785
     # via cattrs
-lsprotocol==2022.0.0a10 \
-    --hash=sha256:2cd78770b7a4ec979f3ee3761265effd50ea0f5e858ce21bf2fba972e1783c50 \
-    --hash=sha256:ef516aec43c2b3c8debc06e84558ea9a64c36d635422d1614fd7fd2a45b1d291
+lsprotocol==2023.0.0a1 \
+    --hash=sha256:133c339a7cccb299a5b357f9b8ef6aebe27616e0daf4ba54e63476afe0e12e47 \
+    --hash=sha256:32edfd4856abba1349bf5a070567445b3d7286951afba3644b472629796f82d0
     # via pygls
 packaging==23.0 \
     --hash=sha256:714ac14496c3e68c99c29b00845f7a2b85f3bb6f1078fd9f72fd20f0570002b2 \

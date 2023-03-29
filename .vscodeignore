@@ -17,10 +17,10 @@ vsc-extension-quickstart.md
 **/__pycache__/**
 **/.pyc
 bundled/libs/bin/**
-build/**
 noxfile.py
 .pytest_cache/**
 .pylintrc
 .flake8
 **/requirements.txt
 **/requirements.in
+**/tool/_debug_server.py
