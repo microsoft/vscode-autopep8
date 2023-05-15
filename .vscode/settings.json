@@ -17,5 +17,4 @@
     "python.testing.pytestEnabled": true,
     "python.testing.cwd": "${workspaceFolder}",
     "python.linting.flake8Enabled": true,
-    "python.formatting.provider": "autopep8"
 }
