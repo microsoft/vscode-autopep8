@@ -119,7 +119,7 @@
                         "%settings.importStrategy.useBundled.description%",
                         "%settings.importStrategy.fromEnvironment.description%"
                     ],
-                    "scope": "window",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "autopep8.interpreter": {
