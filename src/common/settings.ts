@@ -51,7 +51,11 @@ function getArgs(namespace: string, workspace: WorkspaceFolder): string[] {
     }
 
     const legacyConfig = getConfiguration('python', workspace.uri);
-    return legacyConfig.get<string[]>('formatting.autopep8Args', []);
+    const legacyArgs = legacyConfig.get<string[]>('formatting.autopep8Args', []);
+    if (legacyArgs.length > 0) {
+        traceLog(`Using legacy configuration form 'python.formatting.autopep8Args': ${legacyArgs.join(' ')}.`);
+    }
+    return legacyArgs;
 }
 
 function getPath(namespace: string, workspace: WorkspaceFolder): string[] {
@@ -65,6 +69,7 @@ function getPath(namespace: string, workspace: WorkspaceFolder): string[] {
     const legacyConfig = getConfiguration('python', workspace.uri);
     const legacyPath = legacyConfig.get<string>('formatting.autopep8Path', '');
     if (legacyPath.length > 0 && legacyPath !== 'autopep8') {
+        traceLog(`Using legacy configuration form 'python.formatting.autopep8Path': ${legacyPath}`);
         return [legacyPath];
     }
     return [];

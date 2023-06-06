@@ -45,7 +45,6 @@ If you want to disable autopep8 formatter, you can [disable this extension](http
 | Settings                  | Default      | Description                                                                                                                                                                                                                                                                          |
 | ------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | autopep8.args             | `[]`         | Custom arguments passed to `autopep8`. E.g `"autopep8.args" = ["--config", "<file>"]`                                                                                                                                                                                                |
-| autopep8.logLevel         | `error`      | Sets the tracing level for the extension.                                                                                                                                                                                                                                            |
 | autopep8.path             | `[]`         | Setting to provide custom `autopep8` executable. This will slow down formatting, since we will have to run `autopep8` executable every time or file save or open. Example 1: `["~/global_env/autopep8"]` Example 2: `["conda", "run", "-n", "lint_env", "python", "-m", "autopep8"]` |
 | autopep8.interpreter      | `[]`         | Path to a python interpreter to use to run the linter server.                                                                                                                                                                                                                        |
 | autopep8.importStrategy   | `useBundled` | Setting to choose where to load `autopep8` from. `useBundled` picks autopep8 bundled with the extension. `fromEnvironment` uses `autopep8` available in the environment.                                                                                                             |
@@ -56,3 +55,7 @@ If you want to disable autopep8 formatter, you can [disable this extension](http
 | Command           | Description                       |
 | ----------------- | --------------------------------- |
 | autopep8: Restart | Force re-start the format server. |
+
+## Logging
+
+Use `Developer : Set Log Level...` command from the **Command Palette**, and select `autopep8` from the extensions list to set the Log Level for the extension. For detailed LSP traces, add `"autopep8.trace.server" : "verbose"` to your **User** `settings.json` file.
