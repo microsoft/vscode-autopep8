@@ -392,6 +392,9 @@ def _run_tool_on_document(
             use_stdin=use_stdin,
             cwd=cwd,
             source=document.source.replace("\r\n", "\n"),
+            env={
+                "PYTHONUTF8": "1",
+            }
         )
         if result.stderr:
             log_to_output(result.stderr)
@@ -411,6 +414,7 @@ def _run_tool_on_document(
             source=document.source,
             env={
                 "LS_IMPORT_STRATEGY": settings["importStrategy"],
+                "PYTHONUTF8": "1",
             },
         )
         result = _to_run_result_with_logging(result)
@@ -467,7 +471,13 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
         # This mode is used when running executables.
         log_to_output(" ".join(argv))
         log_to_output(f"CWD Server: {cwd}")
-        result = utils.run_path(argv=argv, use_stdin=True, cwd=cwd)
+        result = utils.run_path(
+            argv=argv,
+            use_stdin=True,
+            cwd=cwd,
+            env={
+                "PYTHONUTF8": "1",
+            })
         if result.stderr:
             log_to_output(result.stderr)
     elif use_rpc:
@@ -484,6 +494,7 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
             cwd=cwd,
             env={
                 "LS_IMPORT_STRATEGY": settings["importStrategy"],
+                "PYTHONUTF8": "1",
             },
         )
         result = _to_run_result_with_logging(result)
