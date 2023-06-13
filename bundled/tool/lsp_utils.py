@@ -14,7 +14,7 @@ import subprocess
 import sys
 import sysconfig
 import threading
-from typing import Any, Callable, List, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 # Save the working directory used when loading this module
 SERVER_CWD = os.getcwd()
@@ -156,9 +156,16 @@ def run_module(
 
 
 def run_path(
-    argv: Sequence[str], use_stdin: bool, cwd: str, source: str = None
+    argv: Sequence[str],
+    use_stdin: bool,
+    cwd: str,
+    source: str = None,
+    env: Optional[Dict[str, str]] = None,
 ) -> RunResult:
     """Runs as an executable."""
+    new_env = os.environ.copy()
+    if env is not None:
+        new_env.update(env)
     if use_stdin:
         with subprocess.Popen(
             argv,
@@ -167,6 +174,7 @@ def run_path(
             stderr=subprocess.PIPE,
             stdin=subprocess.PIPE,
             cwd=cwd,
+            env=new_env,
         ) as process:
             return RunResult(*process.communicate(input=source))
     else:
@@ -177,6 +185,7 @@ def run_path(
             stderr=subprocess.PIPE,
             check=False,
             cwd=cwd,
+            env=new_env,
         )
         return RunResult(result.stdout, result.stderr)
 
