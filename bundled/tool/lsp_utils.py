@@ -14,6 +14,7 @@ import subprocess
 import sys
 import sysconfig
 import threading
+import traceback
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 # Save the working directory used when loading this module
@@ -129,7 +130,8 @@ def _run_module(
                         import autopep8
                         importlib.reload(autopep8)
                     except:
-                        pass
+                        str_error.write("Mitigation for `autopep8` issue failed: https://github.com/hhatto/autopep8/issues/625")
+                        str_error.write(f"Error reloading autopep8: {traceback.format_exc()}\n")
                     if use_stdin and source is not None:
                         str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
                         with redirect_io("stdin", str_input):
