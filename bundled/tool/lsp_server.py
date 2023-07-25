@@ -238,13 +238,22 @@ def _log_version_info() -> None:
 # Internal functional and settings management APIs.
 # *****************************************************
 def _get_global_defaults():
-    return {
+    settings = {
         "path": GLOBAL_SETTINGS.get("path", [sys.executable, "-m", TOOL_MODULE]),
         "interpreter": GLOBAL_SETTINGS.get("interpreter", [sys.executable]),
         "args": GLOBAL_SETTINGS.get("args", []),
         "importStrategy": GLOBAL_SETTINGS.get("importStrategy", "useBundled"),
         "showNotifications": GLOBAL_SETTINGS.get("showNotifications", "off"),
     }
+    if not settings["path"]:
+        # workaround for reload issue with autopep8
+        # https://github.com/hhatto/autopep8/issues/625
+        settings["path"] = [
+            sys.executable,
+            "-m",
+            TOOL_MODULE,
+        ]
+    return settings
 
 
 def _update_workspace_settings(settings):
