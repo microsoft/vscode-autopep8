@@ -394,6 +394,19 @@ def _run_tool_on_document(
     argv += TOOL_ARGS + settings["args"] + extra_args
 
     if use_stdin:
+        arg = _parse_autopep_exclude_arg(argv)
+
+        if arg.exclude is not None:
+            exclude_patterns = _split_comma_separated(arg.exclude)
+
+            import fnmatch
+            for pattern in exclude_patterns:
+                if fnmatch.fnmatch(document.path, pattern):
+                    log_to_output(f"Excluded file: {document.path} because it matches patterh: {pattern}")
+                    return None
+
+
+
         argv += ["-"]
 
     if use_path:
@@ -543,6 +556,29 @@ def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> utils.RunRe
         log_to_output(rpc_result.stderr)
         error = rpc_result.stderr
     return utils.RunResult(rpc_result.stdout, error)
+
+
+def _parse_autopep_exclude_arg(
+    argv: list(str)
+):
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Exclude Argument Parser"
+    )
+
+    parser.add_argument(
+        "--exclude",
+        metavar='globs',
+        required=False
+    )
+
+    exclude_argument, _ = parser.parse_known_args(argv)
+
+    return exclude_argument
+
+def _split_comma_separated(string: str):
+    """Return a set of strings."""
+    return {text.strip() for text in string.split(',') if text.strip()}
 
 
 # *****************************************************
