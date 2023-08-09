@@ -3,8 +3,10 @@
 """Implementation of tool support over LSP."""
 from __future__ import annotations
 
+import argparse
 import ast
 import copy
+import fnmatch
 import json
 import os
 import pathlib
@@ -399,7 +401,6 @@ def _run_tool_on_document(
         if arg.exclude is not None:
             exclude_patterns = _split_comma_separated(arg.exclude)
 
-            import fnmatch
             for pattern in exclude_patterns:
                 if fnmatch.fnmatch(document.path, pattern):
                     log_to_output(f"Excluded file: {document.path} because it matches patterh: {pattern}")
@@ -561,7 +562,6 @@ def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> utils.RunRe
 def _parse_autopep_exclude_arg(
     argv: list(str)
 ):
-    import argparse
     parser = argparse.ArgumentParser(
         description="Exclude Argument Parser"
     )

@@ -145,50 +145,19 @@ def test_skipping_excluded_files():
     """Test skipping formatting when the file is in excluded pattern"""
 
     UNFORMATTED_EXCLUDED_FILE_PATH = constants.TEST_DATA / "sample3" / "sample.unformatted"
-    with session.LspSession() as ls_session:
-        # Use any stdlib path here
-        uri = utils.as_uri(pathlib.__file__)
 
-        init_args = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
-        init_options = init_args["initializationOptions"]
-        init_options["settings"][0]["args"] = ["--exclude='**/*.py'"]
-        ls_session.initialize(init_args)
+    contents = UNFORMATTED_EXCLUDED_FILE_PATH.read_text()
 
-        ls_session.notify_did_open(
-            {
-                "textDocument": {
-                    "uri": uri,
-                    "languageId": "python",
-                    "version": 1,
-                    "text": UNFORMATTED_EXCLUDED_FILE_PATH.read_text(encoding="utf-8"),
-                }
-            }
-        )
-
-        actual = ls_session.text_document_formatting(
-            {
-                "textDocument": {"uri": uri},
-                # `options` is not used by black
-                "options": {"tabSize": 4, "insertSpaces": True},
-            }
-        )
-
-    expected = None
-    assert_that(actual, is_(expected))
-
-    def test_formatting_file_not_in_excluded_files():
-        """Test formatting when the file is not in excluded pattern"""
-        FORMATTED_TEST_FILE_PATH = constants.TEST_DATA / "sample4" / "sample.py"
-        UNFORMATTED_INCLUDED_FILE_PATH = constants.TEST_DATA / "sample4" / "sample.included.unformatted"
-
+    with utils.python_file(contents, UNFORMATTED_EXCLUDED_FILE_PATH.parent) as pf:
         with session.LspSession() as ls_session:
             # Use any stdlib path here
-            uri = utils.as_uri(pathlib.__file__)
+            uri = utils.as_uri(str(pf))
 
             init_args = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
             init_options = init_args["initializationOptions"]
-            init_options["settings"][0]["args"] = ["--exclude='**/*exclude'"]
+            init_options["settings"][0]["args"] = ["--exclude=**/*.py"]
             ls_session.initialize(init_args)
+            # ls_session.initialize()
 
             ls_session.notify_did_open(
                 {
@@ -196,7 +165,7 @@ def test_skipping_excluded_files():
                         "uri": uri,
                         "languageId": "python",
                         "version": 1,
-                        "text": UNFORMATTED_INCLUDED_FILE_PATH.read_text(encoding="utf-8"),
+                        "text": UNFORMATTED_EXCLUDED_FILE_PATH.read_text(encoding="utf-8"),
                     }
                 }
             )
@@ -208,6 +177,45 @@ def test_skipping_excluded_files():
                     "options": {"tabSize": 4, "insertSpaces": True},
                 }
             )
+
+    expected = None
+    assert_that(actual, is_(expected))
+
+    def test_formatting_file_not_in_excluded_files():
+        """Test formatting when the file is not in excluded pattern"""
+        FORMATTED_TEST_FILE_PATH = constants.TEST_DATA / "sample4" / "sample.py"
+        UNFORMATTED_INCLUDED_FILE_PATH = constants.TEST_DATA / "sample4" / "sample.included.unformatted"
+
+        contents = UNFORMATTED_INCLUDED_FILE_PATH.read_text()
+
+        with utils.python_file(contents, UNFORMATTED_INCLUDED_FILE_PATH.parent) as pf:
+            with session.LspSession() as ls_session:
+                # Use any stdlib path here
+                uri = utils.as_uri(str(pf))
+
+                init_args = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
+                init_options = init_args["initializationOptions"]
+                init_options["settings"][0]["args"] = ["--exclude='**/*exclude'"]
+                ls_session.initialize(init_args)
+
+                ls_session.notify_did_open(
+                    {
+                        "textDocument": {
+                            "uri": uri,
+                            "languageId": "python",
+                            "version": 1,
+                            "text": UNFORMATTED_INCLUDED_FILE_PATH.read_text(encoding="utf-8"),
+                        }
+                    }
+                )
+
+                actual = ls_session.text_document_formatting(
+                    {
+                        "textDocument": {"uri": uri},
+                        # `options` is not used by black
+                        "options": {"tabSize": 4, "insertSpaces": True},
+                    }
+                )
 
         expected = [
             {
@@ -225,33 +233,37 @@ def test_skipping_excluded_files():
         FORMATTED_TEST_FILE_PATH = constants.TEST_DATA / "sample4" / "sample.py"
         UNFORMATTED_INCLUDED_FILE_PATH = constants.TEST_DATA / "sample4" / "sample.included.unformatted"
 
-        with session.LspSession() as ls_session:
-            # Use any stdlib path here
-            uri = utils.as_uri(pathlib.__file__)
+        contents = UNFORMATTED_INCLUDED_FILE_PATH.read_text()
 
-            init_args = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
-            init_options = init_args["initializationOptions"]
-            init_options["settings"][0]["args"] = ["--exclude='**/*exclude'", "--aggressive"]
-            ls_session.initialize(init_args)
+        with utils.python_file(contents, UNFORMATTED_INCLUDED_FILE_PATH.parent) as pf:
 
-            ls_session.notify_did_open(
-                {
-                    "textDocument": {
-                        "uri": uri,
-                        "languageId": "python",
-                        "version": 1,
-                        "text": UNFORMATTED_INCLUDED_FILE_PATH.read_text(encoding="utf-8"),
+            with session.LspSession() as ls_session:
+                # Use any stdlib path here
+                uri = utils.as_uri(str(pf))
+
+                init_args = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
+                init_options = init_args["initializationOptions"]
+                init_options["settings"][0]["args"] = ["--exclude='**/*exclude'", "--aggressive"]
+                ls_session.initialize(init_args)
+
+                ls_session.notify_did_open(
+                    {
+                        "textDocument": {
+                            "uri": uri,
+                            "languageId": "python",
+                            "version": 1,
+                            "text": UNFORMATTED_INCLUDED_FILE_PATH.read_text(encoding="utf-8"),
+                        }
                     }
-                }
-            )
+                )
 
-            actual = ls_session.text_document_formatting(
-                {
-                    "textDocument": {"uri": uri},
-                    # `options` is not used by black
-                    "options": {"tabSize": 4, "insertSpaces": True},
-                }
-            )
+                actual = ls_session.text_document_formatting(
+                    {
+                        "textDocument": {"uri": uri},
+                        # `options` is not used by black
+                        "options": {"tabSize": 4, "insertSpaces": True},
+                    }
+                )
 
         expected = [
             {
