@@ -3,6 +3,7 @@
 """
 Test for formatting over LSP.
 """
+import copy
 import pathlib
 
 from hamcrest import assert_that, is_
@@ -148,10 +149,10 @@ def test_skipping_excluded_files():
         # Use any stdlib path here
         uri = utils.as_uri(pathlib.__file__)
 
-        init_options = defaults.VSCODE_DEFAULT_INITIALIZE["initializationOptions"]
+        init_args = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
+        init_options = init_args["initializationOptions"]
         init_options["settings"][0]["args"] = ["--exclude='**/*.py'"]
-        ls_session.initialize(defaults.VSCODE_DEFAULT_INITIALIZE)
-        ls_session.initialize()
+        ls_session.initialize(init_args)
 
         ls_session.notify_did_open(
             {
@@ -184,10 +185,10 @@ def test_skipping_excluded_files():
             # Use any stdlib path here
             uri = utils.as_uri(pathlib.__file__)
 
-            init_options = defaults.VSCODE_DEFAULT_INITIALIZE["initializationOptions"]
+            init_args = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
+            init_options = init_args["initializationOptions"]
             init_options["settings"][0]["args"] = ["--exclude='**/*exclude'"]
-            ls_session.initialize(defaults.VSCODE_DEFAULT_INITIALIZE)
-            ls_session.initialize()
+            ls_session.initialize(init_args)
 
             ls_session.notify_did_open(
                 {
@@ -228,10 +229,10 @@ def test_skipping_excluded_files():
             # Use any stdlib path here
             uri = utils.as_uri(pathlib.__file__)
 
-            init_options = defaults.VSCODE_DEFAULT_INITIALIZE["initializationOptions"]
+            init_args = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
+            init_options = init_args["initializationOptions"]
             init_options["settings"][0]["args"] = ["--exclude='**/*exclude'", "--aggressive"]
-            ls_session.initialize(defaults.VSCODE_DEFAULT_INITIALIZE)
-            ls_session.initialize()
+            ls_session.initialize(init_args)
 
             ls_session.notify_did_open(
                 {
