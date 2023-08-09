@@ -195,7 +195,7 @@ def test_skipping_excluded_files():
 
                 init_args = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
                 init_options = init_args["initializationOptions"]
-                init_options["settings"][0]["args"] = ["--exclude='**/*exclude'"]
+                init_options["settings"][0]["args"] = ["--exclude=**/*exclude"]
                 ls_session.initialize(init_args)
 
                 ls_session.notify_did_open(
@@ -243,7 +243,7 @@ def test_skipping_excluded_files():
 
                 init_args = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
                 init_options = init_args["initializationOptions"]
-                init_options["settings"][0]["args"] = ["--exclude='**/*exclude'", "--aggressive"]
+                init_options["settings"][0]["args"] = ["--exclude=**/*exclude", "--aggressive"]
                 ls_session.initialize(init_args)
 
                 ls_session.notify_did_open(
