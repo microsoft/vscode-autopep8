@@ -218,3 +218,47 @@ def test_skipping_excluded_files():
                 }
             ]
         assert_that(actual, is_(expected))
+
+    def test_formatting_file_with_excluded_and_other_args():
+        """Test formatting when we have more arguments specified"""
+        FORMATTED_TEST_FILE_PATH = constants.TEST_DATA / "sample4" / "sample.py"
+        UNFORMATTED_INCLUDED_FILE_PATH = constants.TEST_DATA / "sample4" / "sample.included.unformatted"
+
+        with session.LspSession() as ls_session:
+            # Use any stdlib path here
+            uri = utils.as_uri(pathlib.__file__)
+
+            init_options = defaults.VSCODE_DEFAULT_INITIALIZE["initializationOptions"]
+            init_options["settings"][0]["args"] = ["--exclude='**/*exclude'", "--aggressive"]
+            ls_session.initialize(defaults.VSCODE_DEFAULT_INITIALIZE)
+            ls_session.initialize()
+
+            ls_session.notify_did_open(
+                {
+                    "textDocument": {
+                        "uri": uri,
+                        "languageId": "python",
+                        "version": 1,
+                        "text": UNFORMATTED_INCLUDED_FILE_PATH.read_text(encoding="utf-8"),
+                    }
+                }
+            )
+
+            actual = ls_session.text_document_formatting(
+                {
+                    "textDocument": {"uri": uri},
+                    # `options` is not used by black
+                    "options": {"tabSize": 4, "insertSpaces": True},
+                }
+            )
+
+        expected = [
+            {
+                "range": {
+                    "start": {"line": 0, "character": 0},
+                    "end": {"line": len(lines), "character": 0},
+                    },
+                "newText": FORMATTED_TEST_FILE_PATH.read_text(),
+                }
+            ]
+        assert_that(actual, is_(expected))
