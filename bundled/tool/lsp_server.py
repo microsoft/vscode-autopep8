@@ -396,17 +396,10 @@ def _run_tool_on_document(
     argv += TOOL_ARGS + settings["args"] + extra_args
 
     if use_stdin:
-        arg = _parse_autopep_exclude_arg(argv)
 
-        if arg.exclude is not None:
-            exclude_patterns = _split_comma_separated(arg.exclude)
-
-            for pattern in exclude_patterns:
-                if fnmatch.fnmatch(document.path, pattern):
-                    log_to_output(f"Excluded file: {document.path} because it matches patterh: {pattern}")
-                    return None
-
-
+        if _is_file_in_excluded_pattern(document.path, argv):
+            log_to_output(f"Excluded file: {document.path} because it matches pattern in args")
+            return None
 
         argv += ["-"]
 
@@ -557,6 +550,19 @@ def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> utils.RunRe
         log_to_output(rpc_result.stderr)
         error = rpc_result.stderr
     return utils.RunResult(rpc_result.stdout, error)
+
+
+def _is_file_in_excluded_pattern(file_path: str, argv: list(str)) -> bool:
+    arg = _parse_autopep_exclude_arg(argv)
+
+    if arg.exclude is not None:
+        exclude_patterns = _split_comma_separated(arg.exclude)
+
+        for pattern in exclude_patterns:
+            if fnmatch.fnmatch(file_path, pattern):
+                return True
+
+    return False
 
 
 def _parse_autopep_exclude_arg(

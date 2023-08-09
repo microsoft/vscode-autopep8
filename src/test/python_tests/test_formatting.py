@@ -147,8 +147,6 @@ def test_skipping_excluded_files():
     UNFORMATTED_EXCLUDED_FILE_PATH = constants.TEST_DATA / "sample3" / "sample.unformatted"
 
     contents = UNFORMATTED_EXCLUDED_FILE_PATH.read_text()
-    lines = contents.splitlines(keepends=False)
-
 
     with utils.python_file(contents, UNFORMATTED_EXCLUDED_FILE_PATH.parent) as pf:
         with session.LspSession() as ls_session:
