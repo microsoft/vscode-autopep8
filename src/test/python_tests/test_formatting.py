@@ -157,7 +157,6 @@ def test_skipping_excluded_files():
             init_options = init_args["initializationOptions"]
             init_options["settings"][0]["args"] = ["--exclude=**/*.py"]
             ls_session.initialize(init_args)
-            # ls_session.initialize()
 
             ls_session.notify_did_open(
                 {
