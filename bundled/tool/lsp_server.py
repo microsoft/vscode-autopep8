@@ -556,7 +556,8 @@ def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> utils.RunRe
 
 def _is_file_in_excluded_pattern(file_path: str, exclude_arg) -> bool:
     if exclude_arg.exclude is not None:
-        exclude_patterns = _split_comma_separated(exclude_arg.exclude)
+        exclude_string = ', '.join(exclude_arg.exclude)
+        exclude_patterns = _split_comma_separated(exclude_string)
 
         for pattern in exclude_patterns:
             if fnmatch.fnmatch(file_path, pattern):
@@ -575,6 +576,7 @@ def _parse_autopep_exclude_arg(
     parser.add_argument(
         "--exclude",
         metavar='globs',
+        nargs='*',
         required=False
     )
 
