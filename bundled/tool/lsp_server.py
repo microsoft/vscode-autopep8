@@ -396,11 +396,13 @@ def _run_tool_on_document(
     argv += TOOL_ARGS + settings["args"] + extra_args
 
     if use_stdin:
+        exclude_arg, remaining_arg_list = _parse_autopep_exclude_arg(argv)
 
-        if _is_file_in_excluded_pattern(document.path, argv):
+        if _is_file_in_excluded_pattern(document.path, exclude_arg):
             log_to_output(f"Excluded file: {document.path} because it matches pattern in args")
             return None
 
+        argv = remaining_arg_list
         argv += ["-"]
 
     if use_path:
@@ -552,11 +554,9 @@ def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> utils.RunRe
     return utils.RunResult(rpc_result.stdout, error)
 
 
-def _is_file_in_excluded_pattern(file_path: str, argv: list(str)) -> bool:
-    arg = _parse_autopep_exclude_arg(argv)
-
-    if arg.exclude is not None:
-        exclude_patterns = _split_comma_separated(arg.exclude)
+def _is_file_in_excluded_pattern(file_path: str, exclude_arg) -> bool:
+    if exclude_arg.exclude is not None:
+        exclude_patterns = _split_comma_separated(exclude_arg.exclude)
 
         for pattern in exclude_patterns:
             if fnmatch.fnmatch(file_path, pattern):
@@ -579,9 +579,9 @@ def _parse_autopep_exclude_arg(
         required=False
     )
 
-    exclude_argument, _ = parser.parse_known_args(argv)
+    exclude_argument, remaining_arg_list = parser.parse_known_args(argv)
 
-    return exclude_argument
+    return exclude_argument, remaining_arg_list
 
 def _split_comma_separated(string: str):
     """Return a set of strings."""
