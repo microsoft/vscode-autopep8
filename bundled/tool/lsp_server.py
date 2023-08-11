@@ -575,6 +575,7 @@ def _parse_autopep_exclude_arg(
     parser.add_argument(
         "--exclude",
         metavar='globs',
+        nargs='*',
         required=False
     )
 
