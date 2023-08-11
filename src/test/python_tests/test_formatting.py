@@ -289,35 +289,38 @@ def test_formatting_file_with_excluded_with_multiple_globs():
     contents = UNFORMATTED_INCLUDED_FILE_PATH.read_text()
     lines = contents.splitlines(keepends=False)
 
-    with utils.python_file(contents, UNFORMATTED_INCLUDED_FILE_PATH.parent) as pf:
+    def format_file(content, file_path):
+        with utils.python_file(content, file_path.parent) as pf:
 
-        with session.LspSession() as ls_session:
-            # Use any stdlib path here
-            uri = utils.as_uri(str(pf))
+            with session.LspSession() as ls_session:
+                # Use any stdlib path here
+                uri = utils.as_uri(str(pf))
 
-            init_args = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
-            init_options = init_args["initializationOptions"]
-            init_options["settings"][0]["args"] = ["--exclude", "**/exclude_dir1/*.py", "**/exclude_dir2/*.py", "--aggressive"]
-            ls_session.initialize(init_args)
+                init_args = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
+                init_options = init_args["initializationOptions"]
+                init_options["settings"][0]["args"] = ["--exclude", "**/exclude_dir1/*.py", "**/exclude_dir2/*.py", "--aggressive"]
+                ls_session.initialize(init_args)
 
-            ls_session.notify_did_open(
-                {
-                    "textDocument": {
-                        "uri": uri,
-                        "languageId": "python",
-                        "version": 1,
-                        "text": UNFORMATTED_INCLUDED_FILE_PATH.read_text(encoding="utf-8"),
+                ls_session.notify_did_open(
+                    {
+                        "textDocument": {
+                            "uri": uri,
+                            "languageId": "python",
+                            "version": 1,
+                            "text": file_path.read_text(encoding="utf-8"),
+                        }
                     }
-                }
-            )
+                )
 
-            actual = ls_session.text_document_formatting(
-                {
-                    "textDocument": {"uri": uri},
-                    # `options` is not used by black
-                    "options": {"tabSize": 4, "insertSpaces": True},
-                }
-            )
+                return ls_session.text_document_formatting(
+                    {
+                        "textDocument": {"uri": uri},
+                        # `options` is not used by black
+                        "options": {"tabSize": 4, "insertSpaces": True},
+                    }
+                )
+
+    actual = format_file(contents, UNFORMATTED_INCLUDED_FILE_PATH)
 
     expected = [
         {
@@ -329,3 +332,16 @@ def test_formatting_file_with_excluded_with_multiple_globs():
             }
         ]
     assert_that(actual, is_(expected))
+
+    contents = UNFORMATTED_EXCLUDE_FILEPATH_1.read_text()
+    lines = contents.splitlines(keepends=False)
+    actual = format_file(contents, UNFORMATTED_EXCLUDE_FILEPATH_1)
+    expected = None
+    assert_that(actual, is_(expected))
+
+    contents = UNFORMATTED_EXCLUDE_FILEPATH_2.read_text()
+    lines = contents.splitlines(keepends=False)
+    actual = format_file(contents, UNFORMATTED_EXCLUDE_FILEPATH_2)
+    expected = None
+    assert_that(actual, is_(expected))
+
