@@ -36,8 +36,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             updateStatus(vscode.l10n.t('Please select a Python interpreter.'), vscode.LanguageStatusSeverity.Error);
             traceError(
                 'Python interpreter missing:\r\n' +
-                    '[Option 1] Select python interpreter using the ms-python.python.\r\n' +
-                    `[Option 2] Set an interpreter using "${serverId}.interpreter" setting.\r\n`,
+                '[Option 1] Select Python interpreter using the ms-python.python.\r\n' +
+                `[Option 2] Set an interpreter using "${serverId}.interpreter" setting.\r\n`,
                 'Please use Python 3.7 or greater.',
             );
         } else {

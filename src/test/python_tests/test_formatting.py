@@ -15,7 +15,7 @@ TIMEOUT = 10000  # 10 seconds
 
 
 def test_formatting():
-    """Test formatting a python file."""
+    """Test formatting a Python file."""
     FORMATTED_TEST_FILE_PATH = constants.TEST_DATA / "sample1" / "sample.py"
     UNFORMATTED_TEST_FILE_PATH = constants.TEST_DATA / "sample1" / "sample.unformatted"
 
@@ -60,7 +60,7 @@ def test_formatting():
 
 
 def test_formatting_cell():
-    """Test formating a python file."""
+    """Test formating a Python file."""
     FORMATTED_TEST_FILE_PATH = constants.TEST_DATA / "sample2" / "sample.formatted"
     UNFORMATTED_TEST_FILE_PATH = constants.TEST_DATA / "sample2" / "sample.unformatted"
 

@@ -7,11 +7,11 @@ import { traceError, traceLog } from './logging';
 
 type Environment = EnvironmentPath & {
     /**
-     * Carries details about python executable.
+     * Carries details about Python executable.
      */
     readonly executable: {
         /**
-         * Uri of the python interpreter/executable. Carries `undefined` in case an executable does not belong to
+         * Uri of the Python interpreter/executable. Carries `undefined` in case an executable does not belong to
          * the environment.
          */
         readonly uri: Uri | undefined;
@@ -28,25 +28,25 @@ type Environment = EnvironmentPath & {
      * Carries details if it is an environment, otherwise `undefined` in case of global interpreters and others.
      */
     readonly environment:
-        | {
-              /**
-               * Type of the environment.
-               */
-              readonly type: EnvironmentType;
-              /**
-               * Name to the environment if any.
-               */
-              readonly name: string | undefined;
-              /**
-               * Uri of the environment folder.
-               */
-              readonly folderUri: Uri;
-              /**
-               * Any specific workspace folder this environment is created for.
-               */
-              readonly workspaceFolder: Uri | undefined;
-          }
-        | undefined;
+    | {
+        /**
+         * Type of the environment.
+         */
+        readonly type: EnvironmentType;
+        /**
+         * Name to the environment if any.
+         */
+        readonly name: string | undefined;
+        /**
+         * Uri of the environment folder.
+         */
+        readonly folderUri: Uri;
+        /**
+         * Any specific workspace folder this environment is created for.
+         */
+        readonly workspaceFolder: Uri | undefined;
+    }
+    | undefined;
     /**
      * Carries Python version information known at this moment.
      */
@@ -72,11 +72,11 @@ type Environment = EnvironmentPath & {
  */
 type ResolvedEnvironment = Environment & {
     /**
-     * Carries complete details about python executable.
+     * Carries complete details about Python executable.
      */
     readonly executable: {
         /**
-         * Uri of the python interpreter/executable. Carries `undefined` in case an executable does not belong to
+         * Uri of the Python interpreter/executable. Carries `undefined` in case an executable does not belong to
          * the environment.
          */
         readonly uri: Uri | undefined;
@@ -128,9 +128,9 @@ type EnvironmentPath = {
      */
     readonly id: string;
     /**
-     * Path to environment folder or path to python executable that uniquely identifies an environment. Environments
-     * lacking a python executable are identified by environment folder paths, whereas other envs can be identified
-     * using python executable path.
+     * Path to environment folder or path to Python executable that uniquely identifies an environment. Environments
+     * lacking a Python executable are identified by environment folder paths, whereas other envs can be identified
+     * using Python executable path.
      */
     readonly path: string;
 };
@@ -285,7 +285,7 @@ export function checkVersion(resolved: ResolvedEnvironment | undefined): boolean
         return true;
     }
     traceError(`Python version ${version?.major}.${version?.minor} is not supported.`);
-    traceError(`Selected python path: ${resolved?.executable.uri?.fsPath}`);
+    traceError(`Selected Python path: ${resolved?.executable.uri?.fsPath}`);
     traceError('Supported versions are 3.7 and above.');
     return false;
 }
