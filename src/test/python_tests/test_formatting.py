@@ -44,7 +44,6 @@ def test_formatting():
     UNFORMATTED_TEST_FILE_PATH = constants.TEST_DATA / "sample1" / "sample.unformatted"
 
     contents = UNFORMATTED_TEST_FILE_PATH.read_text()
-    lines = contents.splitlines(keepends=False)
 
     actual = []
     with utils.python_file(contents, UNFORMATTED_TEST_FILE_PATH.parent) as pf:
@@ -81,7 +80,6 @@ def test_formatting_cell():
     UNFORMATTED_TEST_FILE_PATH = constants.TEST_DATA / "sample2" / "sample.unformatted"
 
     contents = UNFORMATTED_TEST_FILE_PATH.read_text()
-    lines = contents.splitlines(keepends=False)
 
     actual = []
 
@@ -194,7 +192,6 @@ def test_formatting_file_not_in_excluded_files():
     UNFORMATTED_INCLUDED_FILE_PATH = constants.TEST_DATA / "sample4" / "sample.included.unformatted"
 
     contents = UNFORMATTED_INCLUDED_FILE_PATH.read_text()
-    lines = contents.splitlines(keepends=False)
 
     with utils.python_file(contents, UNFORMATTED_INCLUDED_FILE_PATH.parent) as pf:
         with session.LspSession() as ls_session:
@@ -236,7 +233,6 @@ def test_formatting_file_with_excluded_and_other_args():
     UNFORMATTED_INCLUDED_FILE_PATH = constants.TEST_DATA / "sample4" / "sample.included.unformatted"
 
     contents = UNFORMATTED_INCLUDED_FILE_PATH.read_text()
-    lines = contents.splitlines(keepends=False)
 
     with utils.python_file(contents, UNFORMATTED_INCLUDED_FILE_PATH.parent) as pf:
 
@@ -282,7 +278,6 @@ def test_formatting_file_with_excluded_with_multiple_globs():
 
 
     contents = UNFORMATTED_INCLUDED_FILE_PATH.read_text()
-    lines = contents.splitlines(keepends=False)
 
     def format_file(content, file_path):
         with utils.python_file(content, file_path.parent) as pf:
@@ -322,13 +317,11 @@ def test_formatting_file_with_excluded_with_multiple_globs():
     assert_that(actual_text, is_(expected_text))
 
     contents = UNFORMATTED_EXCLUDE_FILEPATH_1.read_text()
-    lines = contents.splitlines(keepends=False)
     actual = format_file(contents, UNFORMATTED_EXCLUDE_FILEPATH_1)
     expected = None
     assert_that(actual, is_(expected))
 
     contents = UNFORMATTED_EXCLUDE_FILEPATH_2.read_text()
-    lines = contents.splitlines(keepends=False)
     actual = format_file(contents, UNFORMATTED_EXCLUDE_FILEPATH_2)
     expected = None
     assert_that(actual, is_(expected))
