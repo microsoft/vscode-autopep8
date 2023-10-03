@@ -5,13 +5,37 @@ Test for formatting over LSP.
 """
 import copy
 import pathlib
+from typing import Any, List
 
+import lsprotocol.converters as cv
+import lsprotocol.types as lsp
 from hamcrest import assert_that, is_
 
 from .lsp_test_client import constants, defaults, session, utils
 
 FORMATTER = utils.get_server_info_defaults()
 TIMEOUT = 10000  # 10 seconds
+
+
+def apply_text_edits(text: str, text_edits: List[lsp.TextEdit]) -> str:
+    if not text_edits:
+        return text
+
+    offsets = [0]
+    for line in text.splitlines(keepends=True):
+        offsets.append(offsets[-1] + len(line))
+
+    for text_edit in reversed(text_edits):
+        start_offset = offsets[text_edit.range.start.line] + text_edit.range.start.character
+        end_offset = offsets[text_edit.range.end.line] + text_edit.range.end.character
+        text = text[:start_offset] + text_edit.new_text + text[end_offset:]
+    return text
+
+
+def destructure_text_edits(text_edits: List[Any]) -> List[lsp.TextEdit]:
+    """Converts text edits from the language server to the format used by the test client."""
+    converter = cv.get_converter()
+    return [converter.structure(text_edit, lsp.TextEdit) for text_edit in text_edits]
 
 
 def test_formatting():
@@ -46,17 +70,9 @@ def test_formatting():
                 }
             )
 
-    expected = [
-        {
-            "range": {
-                "start": {"line": 0, "character": 0},
-                "end": {"line": len(lines), "character": 0},
-            },
-            "newText": FORMATTED_TEST_FILE_PATH.read_text(),
-        }
-    ]
-
-    assert_that(actual, is_(expected))
+    expected_text = FORMATTED_TEST_FILE_PATH.read_text()
+    actual_text = apply_text_edits(contents, destructure_text_edits(actual))
+    assert_that(actual_text, is_(expected_text))
 
 
 def test_formatting_cell():
@@ -97,17 +113,9 @@ def test_formatting_cell():
             }
         )
 
-    expected = [
-        {
-            "range": {
-                "start": {"line": 0, "character": 0},
-                "end": {"line": len(lines), "character": 0},
-            },
-            "newText": FORMATTED_TEST_FILE_PATH.read_text(),
-        }
-    ]
-
-    assert_that(actual, is_(expected))
+    expected_text = FORMATTED_TEST_FILE_PATH.read_text()
+    actual_text = apply_text_edits(contents, destructure_text_edits(actual))
+    assert_that(actual_text, is_(expected_text))
 
 
 def test_skipping_site_packages_files():
@@ -217,16 +225,10 @@ def test_formatting_file_not_in_excluded_files():
                 }
             )
 
-    expected = [
-        {
-            "range": {
-                "start": {"line": 0, "character": 0},
-                "end": {"line": len(lines), "character": 0},
-                },
-            "newText": FORMATTED_TEST_FILE_PATH.read_text(),
-            }
-        ]
-    assert_that(actual, is_(expected))
+    expected_text = FORMATTED_TEST_FILE_PATH.read_text()
+    actual_text = apply_text_edits(contents, destructure_text_edits(actual))
+    assert_that(actual_text, is_(expected_text))
+
 
 def test_formatting_file_with_excluded_and_other_args():
     """Test formatting when we have more arguments specified"""
@@ -266,16 +268,9 @@ def test_formatting_file_with_excluded_and_other_args():
                 }
             )
 
-    expected = [
-        {
-            "range": {
-                "start": {"line": 0, "character": 0},
-                "end": {"line": len(lines), "character": 0},
-                },
-            "newText": FORMATTED_TEST_FILE_PATH.read_text(),
-            }
-        ]
-    assert_that(actual, is_(expected))
+    expected_text = FORMATTED_TEST_FILE_PATH.read_text()
+    actual_text = apply_text_edits(contents, destructure_text_edits(actual))
+    assert_that(actual_text, is_(expected_text))
 
 def test_formatting_file_with_excluded_with_multiple_globs():
     """Test formatting when we have more arguments specified"""
@@ -322,16 +317,9 @@ def test_formatting_file_with_excluded_with_multiple_globs():
 
     actual = format_file(contents, UNFORMATTED_INCLUDED_FILE_PATH)
 
-    expected = [
-        {
-            "range": {
-                "start": {"line": 0, "character": 0},
-                "end": {"line": len(lines), "character": 0},
-                },
-            "newText": FORMATTED_TEST_FILE_PATH.read_text(),
-            }
-        ]
-    assert_that(actual, is_(expected))
+    expected_text = FORMATTED_TEST_FILE_PATH.read_text()
+    actual_text = apply_text_edits(contents, destructure_text_edits(actual))
+    assert_that(actual_text, is_(expected_text))
 
     contents = UNFORMATTED_EXCLUDE_FILEPATH_1.read_text()
     lines = contents.splitlines(keepends=False)

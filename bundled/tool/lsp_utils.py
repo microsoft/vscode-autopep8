@@ -217,7 +217,7 @@ def run_path(
 
 
 def run_api(
-    callback: Callable[[Sequence[str], CustomIO, CustomIO, CustomIO | None], None],
+    callback: Callable[[Sequence[str], CustomIO, CustomIO, Optional[CustomIO]], None],
     argv: Sequence[str],
     use_stdin: bool,
     cwd: str,
@@ -232,7 +232,7 @@ def run_api(
 
 
 def _run_api(
-    callback: Callable[[Sequence[str], CustomIO, CustomIO, CustomIO | None], None],
+    callback: Callable[[Sequence[str], CustomIO, CustomIO, Optional[CustomIO]], None],
     argv: Sequence[str],
     use_stdin: bool,
     source: str = None,
