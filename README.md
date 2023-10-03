@@ -1,10 +1,10 @@
 # Formatter extension for Visual Studio Code using `autopep8`
 
-A Visual Studio Code extension with support for the `autopep8` formatter. The extension ships with `autopep8=2.0.2`.
+A Visual Studio Code extension with support for the `autopep8` formatter. The extension ships with `autopep8=2.0.4`.
 
 Note:
 
--   This extension is supported for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the `python` language (i.e., python >= 3.7).
+-   This extension is supported for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the `python` language (i.e., python >= 3.8).
 -   The bundled `autopep8` is only used if there is no installed version of `autopep8` found in the selected `python` environment.
 -   Minimum supported version of `autopep8` is `1.7.0`.
 -   This extension is experimental. The plan is that it will eventually replace the `autopep8` formatting functionality of [the Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python).
@@ -46,7 +46,7 @@ If you want to disable autopep8 formatter, you can [disable this extension](http
 | ------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | autopep8.args             | `[]`         | Custom arguments passed to `autopep8`. E.g `"autopep8.args" = ["--global-config", "<file>"]`                                                                                                                                                                                                |
 | autopep8.path             | `[]`         | Setting to provide custom `autopep8` executable. This will slow down formatting, since we will have to run `autopep8` executable every time or file save or open. Example 1: `["~/global_env/autopep8"]` Example 2: `["conda", "run", "-n", "lint_env", "python", "-m", "autopep8"]` |
-| autopep8.interpreter      | `[]`         | Path to a python interpreter to use to run the linter server.                                                                                                                                                                                                                        |
+| autopep8.interpreter      | `[]`         | Path to a python interpreter to use to run the linter server. When set to `[]`, the interpreter for the workspace is obtained from `ms-python.python` extension. If set to some path, that path takes precedence, and the Python extension is not queried for the interpreter        |
 | autopep8.importStrategy   | `useBundled` | Setting to choose where to load `autopep8` from. `useBundled` picks autopep8 bundled with the extension. `fromEnvironment` uses `autopep8` available in the environment.                                                                                                             |
 | autopep8.showNotification | `off`        | Setting to control when a notification is shown.                                                                                                                                                                                                                                     |
 
