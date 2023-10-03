@@ -4,7 +4,8 @@
 import { ConfigurationChangeEvent, ConfigurationScope, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { getInterpreterDetails } from './python';
 import { getConfiguration, getWorkspaceFolders } from './vscodeapi';
-import { traceLog } from './logging';
+import { traceInfo, traceLog, traceWarn } from './logging';
+import { EXTENSION_ID } from './constants';
 
 export interface ISettings {
     cwd: string;
@@ -42,39 +43,6 @@ function resolveVariables(value: string[], workspace?: WorkspaceFolder): string[
     });
 }
 
-function getArgs(namespace: string, workspace: WorkspaceFolder): string[] {
-    const config = getConfiguration(namespace, workspace.uri);
-    const args = config.get<string[]>('args', []);
-
-    if (args.length > 0) {
-        return args;
-    }
-
-    const legacyConfig = getConfiguration('python', workspace.uri);
-    const legacyArgs = legacyConfig.get<string[]>('formatting.autopep8Args', []);
-    if (legacyArgs.length > 0) {
-        traceLog(`Using legacy configuration form 'python.formatting.autopep8Args': ${legacyArgs.join(' ')}.`);
-    }
-    return legacyArgs;
-}
-
-function getPath(namespace: string, workspace: WorkspaceFolder): string[] {
-    const config = getConfiguration(namespace, workspace.uri);
-    const path = config.get<string[]>('path', []);
-
-    if (path.length > 0) {
-        return path;
-    }
-
-    const legacyConfig = getConfiguration('python', workspace.uri);
-    const legacyPath = legacyConfig.get<string>('formatting.autopep8Path', '');
-    if (legacyPath.length > 0 && legacyPath !== 'autopep8') {
-        traceLog(`Using legacy configuration form 'python.formatting.autopep8Path': ${legacyPath}`);
-        return [legacyPath];
-    }
-    return [];
-}
-
 export function getInterpreterFromSetting(namespace: string, scope?: ConfigurationScope) {
     const config = getConfiguration(namespace, scope);
     return config.get<string[]>('interpreter');
@@ -109,13 +77,11 @@ export async function getWorkspaceSettings(
         }
     }
 
-    const args = getArgs(namespace, workspace);
-    const path = getPath(namespace, workspace);
     const workspaceSetting = {
         cwd: workspace.uri.fsPath,
         workspace: workspace.uri.toString(),
-        args: resolveVariables(args, workspace),
-        path: resolveVariables(path, workspace),
+        args: resolveVariables(config.get<string[]>('args', []), workspace),
+        path: resolveVariables(config.get<string[]>('path', []), workspace),
         interpreter: resolveVariables(interpreter, workspace),
         importStrategy: config.get<string>('importStrategy', 'fromEnvironment'),
         showNotifications: config.get<string>('showNotifications', 'off'),
@@ -161,4 +127,46 @@ export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespa
     ];
     const changed = settings.map((s) => e.affectsConfiguration(s));
     return changed.includes(true);
+}
+
+export function logDefaultFormatter(): void {
+    getWorkspaceFolders().forEach((workspace) => {
+        let config = getConfiguration('editor', { uri: workspace.uri, languageId: 'python' });
+        if (!config) {
+            config = getConfiguration('editor', workspace.uri);
+            if (!config) {
+                traceInfo('Unable to get editor configuration');
+            }
+        }
+        const formatter = config.get<string>('defaultFormatter', '');
+        traceInfo(`Default formatter is set to ${formatter} for workspace ${workspace.uri.fsPath}`);
+        if (formatter !== EXTENSION_ID) {
+            traceWarn(`autopep8 Formatter is NOT set as the default formatter for workspace ${workspace.uri.fsPath}`);
+            traceWarn('To set autopep8 Formatter as the default formatter, add the following to your settings.json file:');
+            traceWarn(`\n"[python]": {\n    "editor.defaultFormatter": "${EXTENSION_ID}"\n}`);
+        }
+    });
+}
+
+export function logLegacySettings(): void {
+    getWorkspaceFolders().forEach((workspace) => {
+        try {
+            const legacyConfig = getConfiguration('python', workspace.uri);
+            const legacyArgs = legacyConfig.get<string[]>('formatting.autopep8Args', []);
+            const legacyPath = legacyConfig.get<string>('formatting.autopep8Path', '');
+            if (legacyArgs.length > 0) {
+                traceWarn(`"python.formatting.autopep8Args" is deprecated. Use "autopep8.args" instead.`);
+                traceWarn(`"python.formatting.autopep8Args" for workspace ${workspace.uri.fsPath}:`);
+                traceWarn(`\n${JSON.stringify(legacyArgs, null, 4)}`);
+            }
+
+            if (legacyPath.length > 0 && legacyPath !== 'autopep8') {
+                traceWarn(`"python.formatting.autopep8Path" is deprecated. Use "autopep8.path" instead.`);
+                traceWarn(`"python.formatting.autopep8Path" for workspace ${workspace.uri.fsPath}:`);
+                traceWarn(`\n${JSON.stringify(legacyPath, null, 4)}`);
+            }
+        } catch (err) {
+            traceWarn(`Error while logging legacy settings: ${err}`);
+        }
+    });
 }
