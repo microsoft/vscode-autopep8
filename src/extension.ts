@@ -6,7 +6,13 @@ import { LanguageClient } from 'vscode-languageclient/node';
 import { restartServer } from './common/server';
 import { registerLogger, traceError, traceLog, traceVerbose } from './common/logging';
 import { initializePython, onDidChangePythonInterpreter } from './common/python';
-import { checkIfConfigurationChanged, getInterpreterFromSetting, getWorkspaceSettings, logDefaultFormatter, logLegacySettings } from './common/settings';
+import {
+    checkIfConfigurationChanged,
+    getInterpreterFromSetting,
+    getWorkspaceSettings,
+    logDefaultFormatter,
+    logLegacySettings,
+} from './common/settings';
 import { loadServerDefaults } from './common/setup';
 import { getProjectRoot } from './common/utilities';
 import { createOutputChannel, onDidChangeConfiguration, registerCommand } from './common/vscodeapi';

@@ -142,7 +142,9 @@ export function logDefaultFormatter(): void {
         traceInfo(`Default formatter is set to ${formatter} for workspace ${workspace.uri.fsPath}`);
         if (formatter !== EXTENSION_ID) {
             traceWarn(`autopep8 Formatter is NOT set as the default formatter for workspace ${workspace.uri.fsPath}`);
-            traceWarn('To set autopep8 Formatter as the default formatter, add the following to your settings.json file:');
+            traceWarn(
+                'To set autopep8 Formatter as the default formatter, add the following to your settings.json file:',
+            );
             traceWarn(`\n"[python]": {\n    "editor.defaultFormatter": "${EXTENSION_ID}"\n}`);
         }
     });
