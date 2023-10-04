@@ -5,6 +5,7 @@ Test for formatting over LSP.
 """
 import copy
 import pathlib
+import os
 from typing import Any, List
 
 import pytest
@@ -40,14 +41,15 @@ def destructure_text_edits(text_edits: List[Any]) -> List[lsp.TextEdit]:
     return [converter.structure(text_edit, lsp.TextEdit) for text_edit in text_edits]
 
 
-@pytest.mark.parametrize("sample", ["sample1", "sample6"])
-def test_formatting(sample: str):
+@pytest.mark.parametrize("sample, timeout", [("sample1", "2"), ("sample6", "2"), ("sample6", "4000")])
+def test_formatting(sample: str, timeout: str):
     """Test formatting a python file."""
     FORMATTED_TEST_FILE_PATH = constants.TEST_DATA / sample / "sample.py"
     UNFORMATTED_TEST_FILE_PATH = constants.TEST_DATA / sample / "sample.unformatted"
 
     contents = UNFORMATTED_TEST_FILE_PATH.read_text(encoding="utf-8")
 
+    os.environ["LSP_DIFF_TIMEOUT"] = timeout
     actual = []
     with utils.python_file(contents, UNFORMATTED_TEST_FILE_PATH.parent) as pf:
         uri = utils.as_uri(str(pf))
