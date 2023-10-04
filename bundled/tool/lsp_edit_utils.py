@@ -11,6 +11,13 @@ from lsprotocol import types as lsp
 
 DIFF_TIMEOUT = 2 # 2 seconds
 
+def _get_diff(old_text: str, new_text: str):
+    try:
+        import Levenshtein
+        return Levenshtein.opcodes(old_text, new_text)
+    except ImportError:
+        return difflib.SequenceMatcher(a=old_text, b=new_text).get_opcodes()
+
 
 def get_text_edits(old_text: str, new_text: str, timeout: Optional[int] = None) -> List[lsp.TextEdit]:
     """Return a list of text edits to transform old_text into new_text."""
@@ -26,7 +33,7 @@ def get_text_edits(old_text: str, new_text: str, timeout: Optional[int] = None) 
 
     sequences = []
     try:
-        thread = Thread(target=lambda: sequences.extend(difflib.SequenceMatcher(a=old_text, b=new_text).get_opcodes()))
+        thread = Thread(target=lambda: sequences.extend(_get_diff(old_text, new_text)))
         thread.start()
         thread.join(timeout or DIFF_TIMEOUT)
     except Exception:
