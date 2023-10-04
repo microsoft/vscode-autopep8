@@ -33,7 +33,7 @@ def python_file(contents: str, root: pathlib.Path):
             + ".py"
         )
         fullpath = root / basename
-        fullpath.write_text(contents)
+        fullpath.write_text(contents, encoding="utf-8")
         yield fullpath
     finally:
         os.unlink(str(fullpath))
