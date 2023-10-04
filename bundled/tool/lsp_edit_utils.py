@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from lsprotocol import types as lsp
 
-DIFF_TIMEOUT = 2 # 2 seconds
+DIFF_TIMEOUT = 1 # 1 second
 
 def _get_diff(old_text: str, new_text: str):
     try:
