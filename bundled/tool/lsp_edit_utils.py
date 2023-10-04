@@ -2,30 +2,22 @@
 # Licensed under the MIT License.
 """Utility functions for calculating edits."""
 
-
 import bisect
 import difflib
-import os
 
 from threading import Thread
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from lsprotocol import types as lsp
 
+DIFF_TIMEOUT = 2 # 2 seconds
 
-try:
-    DIFF_TIMEOUT =  int(os.getenv("LSP_DIFF_TIMEOUT", "2")) # Default 2 seconds
-except ValueError:
-    DIFF_TIMEOUT = 2
 
-def _get_diff(old_text: str, new_text: str) -> List[Tuple[str, int, int, int, int]]:
-    return difflib.SequenceMatcher(a=old_text, b=new_text).get_opcodes()
-
-def get_text_edits(old_text: str, new_text: str) -> List[lsp.TextEdit]:
+def get_text_edits(old_text: str, new_text: str, timeout: Optional[int] = None) -> List[lsp.TextEdit]:
     """Return a list of text edits to transform old_text into new_text."""
+ 
     offsets = [0]
-    old_text_lines = old_text.splitlines(True)
-    for line in old_text_lines:
+    for line in old_text.splitlines(True):
         offsets.append(offsets[-1] + len(line))
 
     def from_offset(offset: int) -> lsp.Position:
@@ -34,10 +26,10 @@ def get_text_edits(old_text: str, new_text: str) -> List[lsp.TextEdit]:
         return lsp.Position(line=line, character=character)
 
     sequences = []
-    thread = Thread(target=lambda: sequences.extend(_get_diff(old_text, new_text)))
-    thread.start()
     try:
-        thread.join(DIFF_TIMEOUT)
+        thread = Thread(target=lambda: sequences.extend(difflib.SequenceMatcher(a=old_text, b=new_text).get_opcodes()))
+        thread.start()
+        thread.join(timeout or DIFF_TIMEOUT)
     except Exception:
         pass
 

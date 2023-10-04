@@ -5,51 +5,23 @@ Test for formatting over LSP.
 """
 import copy
 import pathlib
-import os
-from typing import Any, List
-
 import pytest
 
-import lsprotocol.converters as cv
-import lsprotocol.types as lsp
+
 from hamcrest import assert_that, is_
 
 from .lsp_test_client import constants, defaults, session, utils
 
 FORMATTER = utils.get_server_info_defaults()
-TIMEOUT = 10000  # 10 seconds
 
 
-def apply_text_edits(text: str, text_edits: List[lsp.TextEdit]) -> str:
-    if not text_edits:
-        return text
-
-    offsets = [0]
-    for line in text.splitlines(keepends=True):
-        offsets.append(offsets[-1] + len(line))
-
-    for text_edit in reversed(text_edits):
-        start_offset = offsets[text_edit.range.start.line] + text_edit.range.start.character
-        end_offset = offsets[text_edit.range.end.line] + text_edit.range.end.character
-        text = text[:start_offset] + text_edit.new_text + text[end_offset:]
-    return text
-
-
-def destructure_text_edits(text_edits: List[Any]) -> List[lsp.TextEdit]:
-    """Converts text edits from the language server to the format used by the test client."""
-    converter = cv.get_converter()
-    return [converter.structure(text_edit, lsp.TextEdit) for text_edit in text_edits]
-
-
-@pytest.mark.parametrize("sample, timeout", [("sample1", "2"), ("sample6", "2"), ("sample6", "4000")])
-def test_formatting(sample: str, timeout: str):
+@pytest.mark.parametrize("sample", ["sample1", "sample6"])
+def test_formatting(sample: str):
     """Test formatting a python file."""
     FORMATTED_TEST_FILE_PATH = constants.TEST_DATA / sample / "sample.py"
     UNFORMATTED_TEST_FILE_PATH = constants.TEST_DATA / sample / "sample.unformatted"
 
     contents = UNFORMATTED_TEST_FILE_PATH.read_text(encoding="utf-8")
-
-    os.environ["LSP_DIFF_TIMEOUT"] = timeout
     actual = []
     with utils.python_file(contents, UNFORMATTED_TEST_FILE_PATH.parent) as pf:
         uri = utils.as_uri(str(pf))
@@ -75,7 +47,7 @@ def test_formatting(sample: str, timeout: str):
             )
 
     expected_text = FORMATTED_TEST_FILE_PATH.read_text(encoding="utf-8")
-    actual_text = apply_text_edits(contents, destructure_text_edits(actual))
+    actual_text = utils.apply_text_edits(contents, utils.destructure_text_edits(actual))
     assert_that(actual_text, is_(expected_text))
 
 
@@ -117,7 +89,7 @@ def test_formatting_cell():
         )
 
     expected_text = FORMATTED_TEST_FILE_PATH.read_text(encoding="utf-8")
-    actual_text = apply_text_edits(contents, destructure_text_edits(actual))
+    actual_text = utils.apply_text_edits(contents, utils.destructure_text_edits(actual))
     assert_that(actual_text, is_(expected_text))
 
 
@@ -228,7 +200,7 @@ def test_formatting_file_not_in_excluded_files():
             )
 
     expected_text = FORMATTED_TEST_FILE_PATH.read_text(encoding="utf-8")
-    actual_text = apply_text_edits(contents, destructure_text_edits(actual))
+    actual_text = utils.apply_text_edits(contents, utils.destructure_text_edits(actual))
     assert_that(actual_text, is_(expected_text))
 
 
@@ -270,7 +242,7 @@ def test_formatting_file_with_excluded_and_other_args():
             )
 
     expected_text = FORMATTED_TEST_FILE_PATH.read_text(encoding="utf-8")
-    actual_text = apply_text_edits(contents, destructure_text_edits(actual))
+    actual_text = utils.apply_text_edits(contents, utils.destructure_text_edits(actual))
     assert_that(actual_text, is_(expected_text))
 
 def test_formatting_file_with_excluded_with_multiple_globs():
@@ -318,7 +290,7 @@ def test_formatting_file_with_excluded_with_multiple_globs():
     actual = format_file(contents, UNFORMATTED_INCLUDED_FILE_PATH)
 
     expected_text = FORMATTED_TEST_FILE_PATH.read_text(encoding="utf-8")
-    actual_text = apply_text_edits(contents, destructure_text_edits(actual))
+    actual_text = utils.apply_text_edits(contents, utils.destructure_text_edits(actual))
     assert_that(actual_text, is_(expected_text))
 
     contents = UNFORMATTED_EXCLUDE_FILEPATH_1.read_text(encoding="utf-8")
