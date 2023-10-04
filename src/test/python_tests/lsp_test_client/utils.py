@@ -11,7 +11,6 @@ import platform
 import random
 from typing import Any, List
 
-
 import lsprotocol.converters as cv
 import lsprotocol.types as lsp
 

@@ -4,9 +4,8 @@
 
 import bisect
 import difflib
-
 from threading import Thread
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from lsprotocol import types as lsp
 
@@ -15,7 +14,7 @@ DIFF_TIMEOUT = 2 # 2 seconds
 
 def get_text_edits(old_text: str, new_text: str, timeout: Optional[int] = None) -> List[lsp.TextEdit]:
     """Return a list of text edits to transform old_text into new_text."""
- 
+
     offsets = [0]
     for line in old_text.splitlines(True):
         offsets.append(offsets[-1] + len(line))

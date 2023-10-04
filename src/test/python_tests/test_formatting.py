@@ -2,12 +2,11 @@
 # Licensed under the MIT License.
 """
 Test for formatting over LSP.
-"""
+""" 
 import copy
 import pathlib
+
 import pytest
-
-
 from hamcrest import assert_that, is_
 
 from .lsp_test_client import constants, defaults, session, utils

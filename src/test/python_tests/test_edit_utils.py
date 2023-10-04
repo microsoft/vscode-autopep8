@@ -4,9 +4,9 @@
 Test for TextEdit utils.
 """
 
+import os
 import pathlib
 import sys
-import os
 
 from hamcrest import assert_that, is_
 
@@ -16,7 +16,8 @@ UTILS_PATH = pathlib.Path(__file__).parent.parent.parent.parent / "bundled" / "t
 sys.path.append(os.fspath(UTILS_PATH))
 
 from lsp_edit_utils import get_text_edits
-from .lsp_test_client import constants,  utils
+
+from .lsp_test_client import constants, utils
 
 
 def test_large_edits():
@@ -26,7 +27,7 @@ def test_large_edits():
     formatted = FORMATTED_TEST_FILE_PATH.read_text(encoding="utf-8")
     unformatted = UNFORMATTED_TEST_FILE_PATH.read_text(encoding="utf-8")
 
-    edits = get_text_edits(unformatted, formatted)
-   
-    actual = utils.apply_text_edits(unformatted, edits, 4000)
+    edits = get_text_edits(unformatted, formatted, 4000)
+
+    actual = utils.apply_text_edits(unformatted, edits)
     assert_that(actual, is_(formatted))
