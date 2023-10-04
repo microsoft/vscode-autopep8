@@ -9,6 +9,8 @@ import os
 import pathlib
 import platform
 import random
+import subprocess
+import sys
 from typing import Any, List
 
 import lsprotocol.converters as cv
@@ -41,6 +43,18 @@ def python_file(contents: str, root: pathlib.Path):
         yield fullpath
     finally:
         os.unlink(str(fullpath))
+
+
+@contextlib.contextmanager
+def install_packages(packages: List[str]):
+    try:
+        subprocess.run([sys.executable, "-m", "pip", "install"] + packages, check=True)
+        yield
+    finally:
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y"] + packages, check=True)
+        except Exception:
+            pass
 
 
 def get_server_info_defaults():
