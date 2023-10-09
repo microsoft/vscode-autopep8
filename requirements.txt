@@ -13,7 +13,7 @@ attrs==23.1.0 \
 autopep8==2.0.4 \
     --hash=sha256:067959ca4a07b24dbd5345efa8325f5f58da4298dab0dde0443d5ed765de80cb \
     --hash=sha256:2913064abd97b3419d1cc83ea71f042cb821f87e45b9c88cad5ad3c4ea87fe0c
-    # via -r ./requirements.in
+    # via -r requirements.in
 cattrs==23.1.2 \
     --hash=sha256:b2bb14311ac17bed0d58785e5a60f022e5431aca3932e3fc5cc8ed8639de50a4 \
     --hash=sha256:db1c821b8c537382b2c7c66678c3790091ca0275ac486c76f3c8f3920e83c657
@@ -33,15 +33,15 @@ lsprotocol==2023.0.0b1 \
 packaging==23.2 \
     --hash=sha256:048fb0e9405036518eaaf48a55953c750c11e1a1b68e0dd1a9d62ed0c092cfc5 \
     --hash=sha256:8c491190033a9af7e1d931d0b5dacc2ef47509b34dd0de67ed209b5203fc88c7
-    # via -r ./requirements.in
+    # via -r requirements.in
 pycodestyle==2.11.0 \
     --hash=sha256:259bcc17857d8a8b3b4a2327324b79e5f020a13c16074670f9c8c8f872ea76d0 \
     --hash=sha256:5d1013ba8dc7895b548be5afb05740ca82454fd899971563d2ef625d090326f8
     # via autopep8
-pygls==1.1.0 \
-    --hash=sha256:70acb6fe0df1c8a17b7ce08daa0afdb4aedc6913a6a6696003e1434fda80a06e \
-    --hash=sha256:eb19b818039d3d705ec8adbcdf5809a93af925f30cd7a3f3b7573479079ba00e
-    # via -r ./requirements.in
+pygls==1.1.1 \
+    --hash=sha256:330704551a335b443bf1cdfb0507f121608591095898d451f0007eeb1510067c \
+    --hash=sha256:b1b4ddd6f800a5573f61f0ec2cd3bc7a859d171f48142b46e1de35a1357c00fe
+    # via -r requirements.in
 tomli==2.0.1 \
     --hash=sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc \
     --hash=sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f
