@@ -12,7 +12,7 @@ import os
 import pathlib
 import sys
 import traceback
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 
 # **********************************************************
@@ -37,6 +37,7 @@ update_sys_path(
 )
 
 
+import lsp_edit_utils as edit_utils
 # **********************************************************
 # Imports needed for the language server goes below this.
 # **********************************************************
@@ -72,17 +73,19 @@ MIN_VERSION = "1.7.0"
 
 
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_FORMATTING)
-def formatting(params: lsp.DocumentFormattingParams) -> list[lsp.TextEdit] | None:
+def formatting(params: lsp.DocumentFormattingParams) -> Optional[List[lsp.TextEdit]]:
     """LSP handler for textDocument/formatting request."""
 
-    document = LSP_SERVER.workspace.get_document(params.text_document.uri)
-    edits = _formatting_helper(document)
-    if edits:
-        return edits
+    document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
+    return _formatting_helper(document)
 
-    # NOTE: If you provide [] array, VS Code will clear the file of all contents.
-    # To indicate no changes to file return None.
-    return None
+
+@LSP_SERVER.feature(lsp.TEXT_DOCUMENT_RANGE_FORMATTING)
+def range_formatting(params: lsp.DocumentRangeFormattingParams) -> Optional[List[lsp.TextEdit]]:
+    """LSP handler for textDocument/formatting request."""
+
+    document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
+    return _formatting_helper(document, params.range)
 
 
 def is_python(code: str) -> bool:
@@ -95,8 +98,13 @@ def is_python(code: str) -> bool:
     return True
 
 
-def _formatting_helper(document: workspace.Document) -> list[lsp.TextEdit] | None:
-    result = _run_tool_on_document(document, use_stdin=True)
+def _formatting_helper(document: workspace.Document, range: Optional[lsp.Range] = None) -> Optional[List[lsp.TextEdit]]:
+    extra_args = []
+    if range:
+        extra_args += ["--line-range", f"{range.start.line + 1}", f"{range.end.line + 1}"]
+
+    result = _run_tool_on_document(document, use_stdin=True, extra_args=extra_args)
+
     if result and result.stdout:
         if LSP_SERVER.lsp.trace == lsp.TraceValues.Verbose:
             log_to_output(
@@ -119,15 +127,11 @@ def _formatting_helper(document: workspace.Document) -> list[lsp.TextEdit] | Non
 
         # If code is already formatted, then no need to send any edits.
         if new_source != document.source:
-            return [
-                lsp.TextEdit(
-                    range=lsp.Range(
-                        start=lsp.Position(line=0, character=0),
-                        end=lsp.Position(line=len(document.lines), character=0),
-                    ),
-                    new_text=new_source,
-                )
-            ]
+            edits = edit_utils.get_text_edits(document.source, new_source)
+            if edits:
+                # NOTE: If you provide [] array, VS Code will clear the file of all contents.
+                # To indicate no changes to file return None.
+                return edits
     return None
 
 
@@ -316,7 +320,7 @@ def _get_document_key(document: workspace.Document):
     return None
 
 
-def _get_settings_by_document(document: workspace.Document | None):
+def _get_settings_by_document(document: Optional[workspace.Document]):
     if document is None or document.path is None:
         return list(WORKSPACE_SETTINGS.values())[0]
 
@@ -355,7 +359,7 @@ def _run_tool_on_document(
     document: workspace.Document,
     use_stdin: bool = False,
     extra_args: Sequence[str] = [],
-) -> utils.RunResult | None:
+) -> Optional[utils.RunResult]:
     """Runs tool on the given document.
 
     if use_stdin is true then contents of the document is passed to the

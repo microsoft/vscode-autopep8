@@ -45,14 +45,16 @@ class LspSession(MethodDispatcher):
 
         shell=True needed for pytest-cov to work in subprocess.
         """
+        env = os.environ.copy()
+        env["PYTHONUTF8"] = "1"
         self._sub = subprocess.Popen(
             [sys.executable, str(self.script)],
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE,
             bufsize=0,
             cwd=self.cwd,
-            env=os.environ,
-            shell="WITH_COVERAGE" in os.environ,
+            env=env,
+            shell="WITH_COVERAGE" in env,
         )
 
         self._writer = JsonRpcStreamWriter(os.fdopen(self._sub.stdin.fileno(), "wb"))
@@ -106,7 +108,7 @@ class LspSession(MethodDispatcher):
 
     def initialized(self, initialized_params=None):
         """Sends the initialized notification to LSP server."""
-        self._endpoint.notify("initialized", initialized_params)
+        self._endpoint.notify("initialized", initialized_params if initialized_params else {})
 
     def shutdown(self, should_exit, exit_timeout=LSP_EXIT_TIMEOUT):
         """Sends the shutdown request to LSP server."""
