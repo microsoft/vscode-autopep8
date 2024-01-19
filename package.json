@@ -95,6 +95,16 @@
                     "scope": "resource",
                     "type": "array"
                 },
+                "autopep8.cwd": {
+                    "default": "${workspaceFolder}",
+                    "markdownDescription": "%settings.cwd.description%",
+                    "scope": "resource",
+                    "type": "string",
+                    "examples": [
+                        "${workspaceFolder}/src",
+                        "${fileDirname}"
+                    ]
+                },
                 "autopep8.path": {
                     "default": [],
                     "markdownDescription": "%settings.path.description%",

@@ -38,6 +38,7 @@ update_sys_path(
 
 
 import lsp_edit_utils as edit_utils
+
 # **********************************************************
 # Imports needed for the language server goes below this.
 # **********************************************************
@@ -52,7 +53,9 @@ GLOBAL_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "lsp_runner.py"
 
 MAX_WORKERS = 5
-LSP_SERVER = server.LanguageServer(name="autopep8-server", version="1.0.0", max_workers=MAX_WORKERS)
+LSP_SERVER = server.LanguageServer(
+    name="autopep8-server", version="1.0.0", max_workers=MAX_WORKERS
+)
 
 
 # **********************************************************
@@ -81,7 +84,9 @@ def formatting(params: lsp.DocumentFormattingParams) -> Optional[List[lsp.TextEd
 
 
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_RANGE_FORMATTING)
-def range_formatting(params: lsp.DocumentRangeFormattingParams) -> Optional[List[lsp.TextEdit]]:
+def range_formatting(
+    params: lsp.DocumentRangeFormattingParams,
+) -> Optional[List[lsp.TextEdit]]:
     """LSP handler for textDocument/formatting request."""
 
     document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
@@ -98,10 +103,16 @@ def is_python(code: str) -> bool:
     return True
 
 
-def _formatting_helper(document: workspace.Document, range: Optional[lsp.Range] = None) -> Optional[List[lsp.TextEdit]]:
+def _formatting_helper(
+    document: workspace.Document, range: Optional[lsp.Range] = None
+) -> Optional[List[lsp.TextEdit]]:
     extra_args = []
     if range:
-        extra_args += ["--line-range", f"{range.start.line + 1}", f"{range.end.line + 1}"]
+        extra_args += [
+            "--line-range",
+            f"{range.start.line + 1}",
+            f"{range.end.line + 1}",
+        ]
 
     result = _run_tool_on_document(document, use_stdin=True, extra_args=extra_args)
 
@@ -153,6 +164,7 @@ def _match_line_endings(document: workspace.Document, text: str) -> str:
         return text
     return text.replace(actual, expected)
 
+
 # **********************************************************
 # Formatting features ends here
 # **********************************************************
@@ -170,7 +182,9 @@ def initialize(params: lsp.InitializeParams) -> None:
     log_to_output(f"sys.path used to run Server:\r\n   {paths}")
 
     _workaround_for_autopep8_reload_issue()
-    log_to_output(f"PYTHONPATH env variable used to run Server:\r\n   {os.environ.get('PYTHONPATH', '')}")
+    log_to_output(
+        f"PYTHONPATH env variable used to run Server:\r\n   {os.environ.get('PYTHONPATH', '')}"
+    )
 
     GLOBAL_SETTINGS.update(**params.initialization_options.get("globalSettings", {}))
 
@@ -182,8 +196,6 @@ def initialize(params: lsp.InitializeParams) -> None:
     log_to_output(
         f"Global settings:\r\n{json.dumps(GLOBAL_SETTINGS, indent=4, ensure_ascii=False)}\r\n"
     )
-
-
 
     _log_version_info()
 
@@ -292,6 +304,7 @@ def _update_workspace_settings(settings):
                 TOOL_MODULE,
             ]
 
+
 def _get_settings_by_path(file_path: pathlib.Path):
     workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
 
@@ -337,11 +350,12 @@ def _get_settings_by_document(document: Optional[workspace.Document]):
 
     return WORKSPACE_SETTINGS[str(key)]
 
+
 def _workaround_for_autopep8_reload_issue():
     # workaround for reload issue with autopep8
     # https://github.com/hhatto/autopep8/issues/625
     lib_path = os.fspath(pathlib.Path(__file__).parent.parent / "libs")
-    python_path = os.environ.get('PYTHONPATH', '')
+    python_path = os.environ.get("PYTHONPATH", "")
     if os.getenv("LS_IMPORT_STRATEGY", "useBundled") == "useBundled":
         os.environ.update(PYTHONPATH=lib_path + os.pathsep + python_path)
     else:
@@ -354,6 +368,19 @@ def _workaround_for_autopep8_reload_issue():
 # *****************************************************
 # Internal execution APIs.
 # *****************************************************
+def get_cwd(settings: Dict[str, Any], document: Optional[workspace.Document]) -> str:
+    """Returns cwd for the given settings and document."""
+    if settings["cwd"] == "${workspaceFolder}":
+        return settings["workspaceFS"]
+
+    if settings["cwd"] == "${fileDirname}":
+        if document is not None:
+            return os.fspath(pathlib.Path(document.path).parent)
+        return settings["workspaceFS"]
+
+    return settings["cwd"]
+
+
 # pylint: disable=too-many-branches
 def _run_tool_on_document(
     document: workspace.Document,
@@ -377,7 +404,7 @@ def _run_tool_on_document(
     settings = copy.deepcopy(_get_settings_by_document(document))
 
     code_workspace = settings["workspaceFS"]
-    cwd = settings["cwd"]
+    cwd = get_cwd(settings, document)
 
     use_path = False
     use_rpc = False
@@ -403,7 +430,9 @@ def _run_tool_on_document(
         exclude_arg, remaining_arg_list = _parse_autopep_exclude_arg(argv)
 
         if _is_file_in_excluded_pattern(document.path, exclude_arg):
-            log_to_output(f"Excluded file: {document.path} because it matches pattern in args")
+            log_to_output(
+                f"Excluded file: {document.path} because it matches pattern in args"
+            )
             return None
 
         argv = remaining_arg_list
@@ -420,7 +449,7 @@ def _run_tool_on_document(
             source=document.source.replace("\r\n", "\n"),
             env={
                 "PYTHONUTF8": "1",
-            }
+            },
         )
         if result.stderr:
             log_to_output(result.stderr)
@@ -471,7 +500,7 @@ def _run_tool_on_document(
 def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunResult:
     """Runs tool."""
     code_workspace = settings["workspaceFS"]
-    cwd = settings["cwd"]
+    cwd = get_cwd(settings, None)
 
     use_path = False
     use_rpc = False
@@ -503,7 +532,8 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
             cwd=cwd,
             env={
                 "PYTHONUTF8": "1",
-            })
+            },
+        )
         if result.stderr:
             log_to_output(result.stderr)
     elif use_rpc:
@@ -560,7 +590,7 @@ def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> utils.RunRe
 
 def _is_file_in_excluded_pattern(file_path: str, exclude_arg) -> bool:
     if exclude_arg.exclude is not None:
-        exclude_string = ', '.join(exclude_arg.exclude)
+        exclude_string = ", ".join(exclude_arg.exclude)
         exclude_patterns = _split_comma_separated(exclude_string)
 
         for pattern in exclude_patterns:
@@ -570,27 +600,19 @@ def _is_file_in_excluded_pattern(file_path: str, exclude_arg) -> bool:
     return False
 
 
-def _parse_autopep_exclude_arg(
-    argv: list(str)
-):
-    parser = argparse.ArgumentParser(
-        description="Exclude Argument Parser"
-    )
+def _parse_autopep_exclude_arg(argv: list(str)):
+    parser = argparse.ArgumentParser(description="Exclude Argument Parser")
 
-    parser.add_argument(
-        "--exclude",
-        metavar='globs',
-        nargs='*',
-        required=False
-    )
+    parser.add_argument("--exclude", metavar="globs", nargs="*", required=False)
 
     exclude_argument, remaining_arg_list = parser.parse_known_args(argv)
 
     return exclude_argument, remaining_arg_list
 
+
 def _split_comma_separated(string: str):
     """Return a set of strings."""
-    return {text.strip() for text in string.split(',') if text.strip()}
+    return {text.strip() for text in string.split(",") if text.strip()}
 
 
 # *****************************************************
