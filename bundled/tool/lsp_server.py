@@ -37,12 +37,11 @@ update_sys_path(
 )
 
 
-import lsp_edit_utils as edit_utils
-
 # **********************************************************
 # Imports needed for the language server goes below this.
 # **********************************************************
 # pylint: disable=wrong-import-position,import-error
+import lsp_edit_utils as edit_utils
 import lsp_jsonrpc as jsonrpc
 import lsp_utils as utils
 from lsprotocol import types as lsp
@@ -138,7 +137,9 @@ def _formatting_helper(
 
         # If code is already formatted, then no need to send any edits.
         if new_source != document.source:
-            edits = edit_utils.get_text_edits(document.source, new_source)
+            edits = edit_utils.get_text_edits(
+                document.source, new_source, lsp.PositionEncodingKind.Utf16
+            )
             if edits:
                 # NOTE: If you provide [] array, VS Code will clear the file of all contents.
                 # To indicate no changes to file return None.
