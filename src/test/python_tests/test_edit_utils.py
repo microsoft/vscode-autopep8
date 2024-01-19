@@ -13,7 +13,6 @@ import pytest
 from hamcrest import assert_that, is_
 from lsprotocol import types as lsp
 
-
 # From: src\test\python_tests\test_edit_utils.py
 # To: bundled\tool\lsp_edit_utils.py
 UTILS_PATH = pathlib.Path(__file__).parent.parent.parent.parent / "bundled" / "tool"
