@@ -57,7 +57,7 @@ There are several settings you can configure to customize the behavior of this e
     </tr>
     <tr>
       <td>autopep8.cwd</td>
-      <td><code>[]</code></td>
+      <td><code>${workspaceFolder}</code></td>
       <td>Sets the current working directory used to format Python files with autopep8. By default, it uses the root directory of the workspace <code>${workspaceFolder}</code>. You can set it to <code>${fileDirname}</code> to use the parent folder of the file being formatted as the working directory for autopep8.</td>
     </tr>
     <tr>
