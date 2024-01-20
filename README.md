@@ -2,7 +2,7 @@
 
 A Visual Studio Code extension with support for the autopep8 formatter. The extension ships with `autopep8=2.0.4`.
 
-> Note: The minimum supported version of autopep8 is `1.7.0`.
+> Note: The minimum supported version of autopep8 is `1.7.0`. If you have any issues with formatting imports with autopep8, please report it to [this issue tracker](https://github.com/hhatto/autopep8/issues) as this extension is just a wrapper around autopep8.
 
 This extension supports for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the Python language (i.e., Python >= 3.8).
 
@@ -56,6 +56,11 @@ There are several settings you can configure to customize the behavior of this e
       <td>Arguments passed to autopep8 to format Python files. Each argument should be provided as a separate string in the array. Example: <code>"autopep8.args" = ["--config", "&lt;file&gt;"]</code></td>
     </tr>
     <tr>
+      <td>autopep8.cwd</td>
+      <td><code>[]</code></td>
+      <td>Sets the current working directory used to format Python files with autopep8. By default, it uses the root directory of the workspace <code>${workspaceFolder}</code>. You can set it to <code>${fileDirname}</code> to use the parent folder of the file being formatted as the working directory for autopep8.</td>
+    </tr>
+    <tr>
       <td>autopep8.path</td>
       <td><code>[]</code></td>
       <td>Path or command to be used by the extension to format Python files with autopep8. Accepts an array of a single or multiple strings. If passing a command, each argument should be provided as a separate string in the array. If set to <code>["autopep8"]</code>, it will use the version of autopep8 available in the <code>PATH</code> environment variable. Note: Using this option may slowdown formatting. <br> Examples: <br> <code>["~/global_env/autopep8"]</code> <br> <code>["conda", "run", "-n", "lint_env", "python", "-m", "autopep8"]</code></td>
@@ -68,7 +73,7 @@ There are several settings you can configure to customize the behavior of this e
     <tr>
       <td>autopep8.importStrategy</td>
       <td><code>useBundled</code></td>
-      <td>Defines which autopep8 formatter binary to be used to format Python files. When set to <code>useBundled</code>, the extension will use the autopep8 formatter binary that is shipped with the extension. When set to <code>fromEnvironment</code>, the extension will attempt to use the autopep8 formatter binary and all dependencies that are available in the currently selected environment. **Note**: If the extension can't find a valid autopep8 formatter binary in the selected environment, it will fallback to using the binary that is shipped with the extension. The <code>autopep8.path</code> setting takes precedence and overrides the behavior of <code>autopep8.importStrategy </code>.</td>
+      <td>Defines which autopep8 formatter binary to be used to format Python files. When set to <code>useBundled</code>, the extension will use the autopep8 formatter binary that is shipped with the extension. When set to <code>fromEnvironment</code>, the extension will attempt to use the autopep8 formatter binary and all dependencies that are available in the currently selected environment. <br> Note: If the extension can't find a valid autopep8 formatter binary in the selected environment, it will fallback to using the binary that is shipped with the extension. The <code>autopep8.path</code> setting takes precedence and overrides the behavior of <code>autopep8.importStrategy </code>.</td>
     </tr>
     <tr>
       <td>autopep8.showNotification</td>
