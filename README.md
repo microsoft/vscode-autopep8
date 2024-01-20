@@ -2,7 +2,7 @@
 
 A Visual Studio Code extension with support for the autopep8 formatter. The extension ships with `autopep8=2.0.4`.
 
-> Note: The minimum supported version of autopep8 is `1.7.0`. If you have any issues with formatting imports with autopep8, please report it to [this issue tracker](https://github.com/hhatto/autopep8/issues) as this extension is just a wrapper around autopep8.
+> Note: The minimum supported version of autopep8 is `1.7.0`. If you have any issues with formatting with autopep8, please report it to [this issue tracker](https://github.com/hhatto/autopep8/issues) as this extension is just a wrapper around autopep8.
 
 This extension supports for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the Python language (i.e., Python >= 3.8).
 
