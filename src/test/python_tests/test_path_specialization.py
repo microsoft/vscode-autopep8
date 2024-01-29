@@ -2,6 +2,9 @@
 Test for path and interpreter settings.
 """
 import copy
+import os
+import pathlib
+import sys
 
 from hamcrest import assert_that, is_
 
@@ -10,6 +13,7 @@ from .lsp_test_client import constants, defaults, session, utils
 FORMATTER = utils.get_server_info_defaults()
 TIMEOUT = 10  # 10 seconds
 TEST_FILE = constants.TEST_DATA / "sample1" / "sample.py"
+UTILS_PATH = pathlib.Path(__file__).parent.parent.parent.parent / "bundled" / "lib" / "autopep8"
 
 
 class CallbackObject:
@@ -24,7 +28,10 @@ class CallbackObject:
 
     def check_for_argv_duplication(self, argv):
         """checks if argv duplication exists and sets result boolean"""
-        if argv["type"] == 4 and argv["message"].split().count("--from-stdin") > 1:
+        message = argv["message"].split()
+        duplicate_stdin = message.count("-") > 1
+        duplicate_version = "--version" in message and "-" in message
+        if argv["type"] == 4 and (duplicate_stdin or duplicate_version):
             self.result = True
 
 
@@ -32,7 +39,7 @@ def test_path():
     """Test linting using pylint bin path set."""
 
     init_params = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
-    init_params["initializationOptions"]["settings"][0]["path"] = ["pylint"]
+    init_params["initializationOptions"]["settings"][0]["path"] = [sys.executable, os.fspath(UTILS_PATH)]
 
     argv_callback_object = CallbackObject()
     contents = TEST_FILE.read_text()
@@ -68,6 +75,14 @@ def test_path():
                         "version": 1,
                         "text": contents,
                     }
+                }
+            )
+
+            ls_session.text_document_formatting(
+                {
+                    "textDocument": {"uri": uri},
+                    # `options` is not used by black
+                    "options": {"tabSize": 4, "insertSpaces": True},
                 }
             )
 
