@@ -199,8 +199,7 @@ def initialize(params: lsp.InitializeParams) -> None:
     )
 
     _log_version_info()
-
-    _log_version_info()
+    _check_args()
 
 
 @LSP_SERVER.feature(lsp.EXIT)
@@ -213,6 +212,25 @@ def on_exit(_params: Optional[Any] = None) -> None:
 def on_shutdown(_params: Optional[Any] = None) -> None:
     """Handle clean up on shutdown."""
     jsonrpc.shutdown_json_rpc()
+
+
+def _check_args() -> None:
+    for settings in WORKSPACE_SETTINGS.values():
+        if "--recursive" in settings["args"]:
+            log_warning(
+                "Removing --recursive from autopep8.args as it is not supported"
+            )
+            settings["args"].remove("--recursive")
+
+        for arg in settings["args"]:
+            if arg.startswith("--") and " " in arg:
+                log_warning(
+                    f"The following argument contains space(s), which might cause issues: {arg}"
+                )
+                log_warning("When using --max-line-length")
+                log_warning('Try `"autopep8.args": ["--max-line-length=88"]`')
+                log_warning('Or `"autopep8.args": ["--max-line-length", "88"]`')
+                log_warning('Instead of `"autopep8.args": ["--max-line-length 88"]`')
 
 
 def _log_version_info() -> None:
@@ -397,8 +415,10 @@ def _run_tool_on_document(
         log_warning(f"Skipping standard library file: {document.path}")
         return None
 
-    if not is_python(document.source):
-        log_warning(f"Skipping non python code: {document.path}")
+    if document.uri.startswith("vscode-notebook-cell") and not is_python(
+        document.source
+    ):
+        log_warning(f"Skipping cell because parse failed: {document.path}")
         return None
 
     # deep copy here to prevent accidentally updating global settings.
@@ -601,7 +621,7 @@ def _is_file_in_excluded_pattern(file_path: str, exclude_arg) -> bool:
     return False
 
 
-def _parse_autopep_exclude_arg(argv: list(str)):
+def _parse_autopep_exclude_arg(argv: List[str]):
     parser = argparse.ArgumentParser(description="Exclude Argument Parser")
 
     parser.add_argument("--exclude", metavar="globs", nargs="*", required=False)
