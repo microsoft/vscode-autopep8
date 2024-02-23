@@ -397,8 +397,10 @@ def _run_tool_on_document(
         log_warning(f"Skipping standard library file: {document.path}")
         return None
 
-    if not is_python(document.source):
-        log_warning(f"Skipping non python code: {document.path}")
+    if document.uri.startswith("vscode-notebook-cell") and not is_python(
+        document.source
+    ):
+        log_warning(f"Skipping cell because parse failed: {document.path}")
         return None
 
     # deep copy here to prevent accidentally updating global settings.
