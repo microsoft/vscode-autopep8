@@ -199,8 +199,7 @@ def initialize(params: lsp.InitializeParams) -> None:
     )
 
     _log_version_info()
-
-    _log_version_info()
+    _check_args()
 
 
 @LSP_SERVER.feature(lsp.EXIT)
@@ -213,6 +212,15 @@ def on_exit(_params: Optional[Any] = None) -> None:
 def on_shutdown(_params: Optional[Any] = None) -> None:
     """Handle clean up on shutdown."""
     jsonrpc.shutdown_json_rpc()
+
+
+def _check_args() -> None:
+    for settings in WORKSPACE_SETTINGS.values():
+        if "--recursive" in settings["args"]:
+            log_warning(
+                "Removing --recursive from autopep8.args as it is not supported"
+            )
+            settings["args"].remove("--recursive")
 
 
 def _log_version_info() -> None:
@@ -603,7 +611,7 @@ def _is_file_in_excluded_pattern(file_path: str, exclude_arg) -> bool:
     return False
 
 
-def _parse_autopep_exclude_arg(argv: list(str)):
+def _parse_autopep_exclude_arg(argv: List[str]):
     parser = argparse.ArgumentParser(description="Exclude Argument Parser")
 
     parser.add_argument("--exclude", metavar="globs", nargs="*", required=False)
