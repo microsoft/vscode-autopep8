@@ -222,6 +222,16 @@ def _check_args() -> None:
             )
             settings["args"].remove("--recursive")
 
+        for arg in settings["args"]:
+            if arg.startswith("--") and " " in arg:
+                log_warning(
+                    f"The following argument contains space(s), which might cause issues: {arg}"
+                )
+                log_warning("When using --max-line-length")
+                log_warning('Try `"autopep8.args": ["--max-line-length=88"]`')
+                log_warning('Or `"autopep8.args": ["--max-line-length", "88"]`')
+                log_warning('Instead of `"autopep8.args": ["--max-line-length 88"]`')
+
 
 def _log_version_info() -> None:
     for value in WORKSPACE_SETTINGS.values():
