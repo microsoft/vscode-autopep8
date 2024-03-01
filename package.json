@@ -187,7 +187,7 @@
         "@typescript-eslint/eslint-plugin": "^7.0.2",
         "@typescript-eslint/parser": "^7.0.2",
         "@vscode/test-electron": "^2.3.9",
-        "@vscode/vsce": "^2.23.0",
+        "@vscode/vsce": "^2.24.0",
         "eslint": "^8.56.0",
         "glob": "^10.3.10",
         "prettier": "^3.2.5",
