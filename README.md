@@ -1,6 +1,6 @@
 # Formatter extension for Visual Studio Code using autopep8
 
-A Visual Studio Code extension with support for the autopep8 formatter. The extension ships with `autopep8=2.0.4`.
+A Visual Studio Code extension with support for the autopep8 formatter. The extension ships with `autopep8=2.1.0`.
 
 > Note: The minimum supported version of autopep8 is `1.7.0`. If you have any issues with formatting with autopep8, please report it to [this issue tracker](https://github.com/hhatto/autopep8/issues) as this extension is just a wrapper around autopep8.
 
