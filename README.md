@@ -1,6 +1,6 @@
 # Formatter extension for Visual Studio Code using autopep8
 
-A Visual Studio Code extension with support for the autopep8 formatter. The extension ships with `autopep8=2.1.0`.
+A Visual Studio Code extension with support for the autopep8 formatter. The extension ships with `autopep8=2.3.1`.
 
 > Note: The minimum supported version of autopep8 is `1.7.0`. If you have any issues with formatting with autopep8, please report it to [this issue tracker](https://github.com/hhatto/autopep8/issues) as this extension is just a wrapper around autopep8.
 
@@ -8,18 +8,17 @@ This extension supports for all [actively supported versions](https://devguide.p
 
 For more information on autopep8, see https://pypi.org/project/autopep8/.
 
-
 ## Usage and Features
 
 The autopep8 extension for Visual Studio Code provides formatting support for your Python files. Check out the [Settings section](#settings) for more details on how to customize this extension.
 
+-   **Integrated formatting**: Once this extension is installed in VS Code, autopep8 will be automatically available as a formatter for Python. This is because the extension ships with a autopep8 binary. You can ensure VS Code uses autopep8 by default for all your Python files by setting the following in your User settings (**View** > **Command Palette...** and run **Preferences: Open User Settings (JSON)**):
 
-- **Integrated formatting**: Once this extension is installed in VS Code, autopep8 will be automatically available as a formatter for Python. This is because the extension ships with a autopep8 binary. You can ensure VS Code uses autopep8 by default for all your Python files by setting the following in your User settings (**View** > **Command Palette...** and run **Preferences: Open User Settings (JSON)**):
-  ```json
-      "[python]": {
-        "editor.defaultFormatter": "ms-python.autopep8"
-      }
-  ```
+    ```json
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.autopep8"
+        }
+    ```
 
 -   **Format on save**: Automatically format your Python files on save by setting the `editor.formatOnSave` setting to `true` and the `editor.defaultFormatter` setting to `ms-python.autopep8`. You can also enable format on save for Python files only by adding the following to your settings:
 
@@ -31,7 +30,6 @@ The autopep8 extension for Visual Studio Code provides formatting support for yo
     ```
 
 -   **Customize autopep8**: You can customize the behavior of autopep8 by setting the `autopep8.args` setting.
-
 
 ### Disabling formatting with autopep8
 
