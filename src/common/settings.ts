@@ -6,6 +6,7 @@ import { getInterpreterDetails } from './python';
 import { getConfiguration, getWorkspaceFolders } from './vscodeapi';
 import { traceInfo, traceLog, traceWarn } from './logging';
 import { EXTENSION_ID } from './constants';
+import { getInterpreterFromSetting } from './utilities';
 
 export interface ISettings {
     cwd: string;
@@ -69,11 +70,6 @@ function resolveVariables(
 function getCwd(config: WorkspaceConfiguration, workspace: WorkspaceFolder): string {
     const cwd = config.get<string>('cwd', workspace.uri.fsPath);
     return resolveVariables([cwd], workspace)[0];
-}
-
-export function getInterpreterFromSetting(namespace: string, scope?: ConfigurationScope) {
-    const config = getConfiguration(namespace, scope);
-    return config.get<string[]>('interpreter');
 }
 
 export async function getWorkspaceSettings(

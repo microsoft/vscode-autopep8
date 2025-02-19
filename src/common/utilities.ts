@@ -3,9 +3,9 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { env, LogLevel, Uri, WorkspaceFolder } from 'vscode';
+import { ConfigurationScope, env, LogLevel, Uri, WorkspaceFolder } from 'vscode';
 import { Trace, TraceValues } from 'vscode-jsonrpc/node';
-import { getWorkspaceFolders } from './vscodeapi';
+import { getConfiguration, getWorkspaceFolders } from './vscodeapi';
 
 function logLevelToTrace(logLevel: LogLevel): Trace {
     switch (logLevel) {
@@ -64,4 +64,9 @@ export async function getProjectRoot(): Promise<WorkspaceFolder> {
         }
         return rootWorkspace;
     }
+}
+
+export function getInterpreterFromSetting(namespace: string, scope?: ConfigurationScope) {
+    const config = getConfiguration(namespace, scope);
+    return config.get<string[]>('interpreter');
 }
