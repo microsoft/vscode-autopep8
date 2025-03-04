@@ -152,10 +152,15 @@ def _run_module(
                 with redirect_io("stderr", str_error):
                     try:
                         import autopep8
+
                         importlib.reload(autopep8)
                     except:
-                        str_error.write("Mitigation for `autopep8` issue failed: https://github.com/hhatto/autopep8/issues/625")
-                        str_error.write(f"Error reloading autopep8: {traceback.format_exc()}\n")
+                        str_error.write(
+                            "Mitigation for `autopep8` issue failed: https://github.com/hhatto/autopep8/issues/625"
+                        )
+                        str_error.write(
+                            f"Error reloading autopep8: {traceback.format_exc()}\n"
+                        )
                     if use_stdin and source is not None:
                         str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
                         with redirect_io("stdin", str_input):
