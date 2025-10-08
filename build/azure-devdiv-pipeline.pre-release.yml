@@ -47,8 +47,8 @@ extends:
           - job: Build
             displayName: Build Job
             pool:
-            name: VSEngSS-MicroBuild2022-1ES # use windows for codesigning to make things easier https://dev.azure.com/devdiv/DevDiv/_wiki/wikis/DevDiv.wiki/650/MicroBuild-Signing
-            os: windows
+              name: VSEngSS-MicroBuild2022-1ES # use windows for codesigning to make things easier https://dev.azure.com/devdiv/DevDiv/_wiki/wikis/DevDiv.wiki/650/MicroBuild-Signing
+              os: windows
             steps:
               - task: NodeTool@0
                 inputs:
