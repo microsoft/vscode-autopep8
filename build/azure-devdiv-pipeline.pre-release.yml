@@ -21,6 +21,17 @@ variables:
     value: 'real'
   - name: TeamName
     value: VSCode-autopep8
+  # Artifact naming variables for signed outputs
+  - name: VSIX_NAME
+    value: autopep8.vsix
+  - name: ARTIFACT_NAME_VSIX
+    value: signed-vsix
+  - name: ARTIFACT_NAME_SOURCE_MAPS_PKG
+    value: source-maps
+  - name: AUTOPEP8_MANIFEST_NAME
+    value: extension.manifest
+  - name: AUTOPEP8_SIGNATURE_NAME
+    value: extension.signature.p7s
 
 parameters:
   - name: publishExtension
@@ -33,6 +44,8 @@ extends:
   parameters:
     sdl:
       sourceAnalysisPool: VSEngSS-MicroBuild2022-1ES
+      sbom:
+        enabled: false  # Disable global SBOM generation; we'll enable selectively per artifact output
     pool:
       name: AzurePipelines-EO
       image: 1ESPT-Ubuntu22.04
@@ -49,6 +62,18 @@ extends:
             pool:
               name: VSEngSS-MicroBuild2022-1ES # use windows for codesigning to make things easier https://dev.azure.com/devdiv/DevDiv/_wiki/wikis/DevDiv.wiki/650/MicroBuild-Signing
               os: windows
+            templateContext:
+              mb:
+                signing:
+                  enabled: true
+                  signType: $(SigningType)
+                  signWithProd: true
+              outputs:
+                - output: pipelineArtifact
+                  displayName: 'Publish Drop Artifact'
+                  targetPath: '$(Build.StagingDirectory)\\drop'
+                  artifactName: drop
+                  sbomEnabled: true  # Generate SBOM only for this artifact
             steps:
               - task: NodeTool@0
                 inputs:
@@ -83,3 +108,103 @@ extends:
 
               - script: npm run package
                 displayName: Build extension
+
+              - script: npx vsce package -o autopep8.vsix
+                displayName: Package VSIX
+
+              - powershell: |
+                  if (Test-Path autopep8.vsix) {
+                    Write-Host 'VSIX generated successfully:'
+                    Get-Item autopep8.vsix | Format-Table Name,Length,LastWriteTime -AutoSize
+                  } else {
+                    Write-Error 'VSIX was not generated.'
+                    exit 1
+                  }
+                displayName: Verify VSIX generated
+
+              - powershell: |
+                  New-Item -ItemType Directory -Path "$(Build.StagingDirectory)\drop" -Force | Out-Null
+                  Write-Host "Created drop folder: $(Build.StagingDirectory)\drop"
+                  if (Test-Path dist) {
+                    Write-Host 'Copying dist bundle to drop...'
+                    Copy-Item -Path dist -Destination "$(Build.StagingDirectory)\drop\dist" -Recurse -Force
+                  } else {
+                    Write-Warning 'dist folder not found; nothing to copy yet.'
+                  }
+                  if (Test-Path autopep8.vsix) {
+                    Write-Host 'Copying VSIX to drop...'
+                    Copy-Item autopep8.vsix "$(Build.StagingDirectory)\drop" -Force
+                  } else {
+                    Write-Warning 'autopep8.vsix not found; cannot copy to drop.'
+                  }
+                  Write-Host 'Drop folder contents:'
+                  Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
+                displayName: Stage build outputs to drop
+
+              # List dist contents and confirm expected bundle output
+              - powershell: |
+                  Write-Host "Listing dist directory (if exists):"
+                  if (Test-Path dist) { Get-ChildItem -Recurse dist | Select-Object FullName,Length | Format-Table -AutoSize } else { Write-Warning 'dist folder not found.' }
+                  Write-Host "Listing root for any pre-existing VSIX (should normally be generated in later packaging stage if added):"
+                  Get-ChildItem -Filter *.vsix -ErrorAction SilentlyContinue | Select-Object Name,Length,LastWriteTime
+                displayName: Inspect build outputs (pre-VSIX)
+
+              # (Optional placeholder) If a VSIX should already exist at this point, enforce it
+              - powershell: |
+                  $vsix = Get-ChildItem -Filter *.vsix -ErrorAction SilentlyContinue
+                  if ($vsix) {
+                    Write-Host "Found VSIX artifact(s):"
+                    $vsix | Format-Table Name,Length,LastWriteTime -AutoSize
+                  } else {
+                    Write-Host 'No VSIX produced yet (expected if packaging occurs in signing stage).'
+                  }
+                displayName: Verify VSIX presence (informational)
+
+      # Conditional signing & validation stage (only runs when publishExtension=true)
+      - stage: SignAndValidate
+        displayName: Sign & Validate Extension
+        dependsOn: Build
+        condition: and(succeeded(), eq('${{ parameters.publishExtension }}', 'true'))
+        jobs:
+          - job: Sign
+            displayName: Code Sign & Verify
+            pool:
+              name: VSEngSS-MicroBuild2022-1ES
+              os: windows
+            templateContext:
+              outputs:
+                - output: pipelineArtifact
+                  displayName: 'Signed VSIX Artifact'
+                  targetPath: '$(Pipeline.Workspace)/drop/$(VSIX_NAME)'
+                  sbomBuildDropPath: '$(Pipeline.Workspace)/drop'
+                  artifactName: $(ARTIFACT_NAME_VSIX)
+                - output: pipelineArtifact
+                  displayName: 'Source Maps (if any)'
+                  targetPath: '$(Pipeline.Workspace)/drop/source-maps'
+                  artifactName: $(ARTIFACT_NAME_SOURCE_MAPS_PKG)
+                - output: pipelineArtifact
+                  displayName: 'Signed Manifest'
+                  targetPath: '$(Pipeline.Workspace)/drop/$(AUTOPEP8_MANIFEST_NAME)'
+                  sbomBuildDropPath: '$(Pipeline.Workspace)/drop'
+                  artifactName: $(AUTOPEP8_MANIFEST_NAME)
+                - output: pipelineArtifact
+                  displayName: 'Signature File'
+                  targetPath: '$(Pipeline.Workspace)/drop/$(AUTOPEP8_SIGNATURE_NAME)'
+                  sbomBuildDropPath: '$(Pipeline.Workspace)/drop'
+                  artifactName: $(AUTOPEP8_SIGNATURE_NAME)
+            steps:
+              - task: DownloadPipelineArtifact@2
+                displayName: Download drop artifact
+                inputs:
+                  buildType: current
+                  artifactName: drop
+                  targetPath: '$(Pipeline.Workspace)\\drop'
+
+              # Ensure vsce is available and generate manifest + sign binaries using shared template
+              - template: build/templates/sign.yml@self
+                parameters:
+                  vsixName: $(VSIX_NAME)
+                  workingDirectory: $(Pipeline.Workspace)\\drop
+                  signType: $(SigningType)
+
+             

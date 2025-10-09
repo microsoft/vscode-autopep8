@@ -1,0 +1,61 @@
+# Template: Sign and validate VS Code extension artifacts
+# Usage Example:
+# - template: build/templates/sign.yml@self
+#   parameters:
+#     vsixName: autopep8.vsix
+#     workingDirectory: $(Build.SourcesDirectory)
+#     signType: real
+
+parameters:
+  - name: vsixName
+    type: string
+    default: autopep8.vsix
+  - name: workingDirectory
+    type: string
+    default: '$(Build.SourcesDirectory)'
+  - name: signType
+    type: string
+    default: real
+
+steps:
+  - script: |
+      npm install -g @vscode/vsce
+    displayName: Install vsce CLI
+
+  - script: |
+      npx vsce generate-manifest -i ${{ parameters.vsixName }} -o extension.manifest
+    displayName: Generate extension manifest
+    workingDirectory: ${{ parameters.workingDirectory }}
+
+  - task: NuGetToolInstaller@1
+    displayName: Install NuGet
+
+  - task: NuGetCommand@2
+    displayName: Restore signing packages
+    inputs:
+      command: restore
+      restoreSolution: '$(Build.SourcesDirectory)/packages.config'
+      restoreDirectory: '$(Build.SourcesDirectory)/packages'
+
+  - task: MSBuild@1
+    displayName: Sign binaries
+    inputs:
+      solution: '$(Build.SourcesDirectory)/sign.proj'
+      msbuildArguments: '/verbosity:minimal /p:SignType=${{ parameters.signType }}'
+
+  - task: PowerShell@2
+    displayName: Compare manifest and signature (basic difference check)
+    inputs:
+      targetType: inline
+      script: |
+        $wd = "${{ parameters.workingDirectory }}"
+        $manifestPath = Join-Path $wd 'extension.manifest'
+        $signaturePath = Join-Path $wd 'extension.signature.p7s'
+        if (!(Test-Path $manifestPath)) { Write-Error "Manifest not found: $manifestPath"; exit 1 }
+        if (!(Test-Path $signaturePath)) { Write-Error "Signature file not found: $signaturePath"; exit 1 }
+        $compareResult = Compare-Object (Get-Content $manifestPath) (Get-Content $signaturePath)
+        if ($compareResult -eq $null) {
+          Write-Error "Files are identical (unexpected). Failing the build."; exit 1
+        } else {
+          Write-Host "Files differ as expected. Signature file exists."; exit 0
+        }
