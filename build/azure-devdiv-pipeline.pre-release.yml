@@ -78,9 +78,9 @@ extends:
             steps:
               - task: NodeTool@0
                 inputs:
-                  versionSpec: '22.x'
-                  checkLatest: false
-                displayName: Select Node version
+                  versionSpec: '20.x'
+                  checkLatest: true
+                displayName: Select Node 20 LTS
 
               - task: UsePythonVersion@0
                 inputs:
@@ -142,70 +142,21 @@ extends:
                   Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
                 displayName: Stage build outputs to drop
 
-              # List dist contents and confirm expected bundle output
-              - powershell: |
-                  Write-Host "Listing dist directory (if exists):"
-                  if (Test-Path dist) { Get-ChildItem -Recurse dist | Select-Object FullName,Length | Format-Table -AutoSize } else { Write-Warning 'dist folder not found.' }
-                  Write-Host "Listing root for any pre-existing VSIX (should normally be generated in later packaging stage if added):"
-                  Get-ChildItem -Filter *.vsix -ErrorAction SilentlyContinue | Select-Object Name,Length,LastWriteTime
-                displayName: Inspect build outputs (pre-VSIX)
-
-              # (Optional placeholder) If a VSIX should already exist at this point, enforce it
-              - powershell: |
-                  $vsix = Get-ChildItem -Filter *.vsix -ErrorAction SilentlyContinue
-                  if ($vsix) {
-                    Write-Host "Found VSIX artifact(s):"
-                    $vsix | Format-Table Name,Length,LastWriteTime -AutoSize
-                  } else {
-                    Write-Host 'No VSIX produced yet (expected if packaging occurs in signing stage).'
-                  }
-                displayName: Verify VSIX presence (informational)
-
-      # Conditional signing & validation stage (only runs when publishExtension=true)
-      - stage: SignAndValidate
-        displayName: Sign & Validate Extension
-        dependsOn: Build
-        condition: and(succeeded(), eq('${{ parameters.publishExtension }}', 'true'))
-        jobs:
-          - job: Sign
-            displayName: Code Sign & Verify
-            pool:
-              name: VSEngSS-MicroBuild2022-1ES
-              os: windows
-            templateContext:
-              outputs:
-                - output: pipelineArtifact
-                  displayName: 'Signed VSIX Artifact'
-                  targetPath: '$(Pipeline.Workspace)/drop/$(VSIX_NAME)'
-                  sbomBuildDropPath: '$(Pipeline.Workspace)/drop'
-                  artifactName: $(ARTIFACT_NAME_VSIX)
-                - output: pipelineArtifact
-                  displayName: 'Source Maps (if any)'
-                  targetPath: '$(Pipeline.Workspace)/drop/source-maps'
-                  artifactName: $(ARTIFACT_NAME_SOURCE_MAPS_PKG)
-                - output: pipelineArtifact
-                  displayName: 'Signed Manifest'
-                  targetPath: '$(Pipeline.Workspace)/drop/$(AUTOPEP8_MANIFEST_NAME)'
-                  sbomBuildDropPath: '$(Pipeline.Workspace)/drop'
-                  artifactName: $(AUTOPEP8_MANIFEST_NAME)
-                - output: pipelineArtifact
-                  displayName: 'Signature File'
-                  targetPath: '$(Pipeline.Workspace)/drop/$(AUTOPEP8_SIGNATURE_NAME)'
-                  sbomBuildDropPath: '$(Pipeline.Workspace)/drop'
-                  artifactName: $(AUTOPEP8_SIGNATURE_NAME)
-            steps:
-              - task: DownloadPipelineArtifact@2
-                displayName: Download drop artifact
-                inputs:
-                  buildType: current
-                  artifactName: drop
-                  targetPath: '$(Pipeline.Workspace)\\drop'
-
-              # Ensure vsce is available and generate manifest + sign binaries using shared template
-              - template: build/templates/sign.yml@self
-                parameters:
-                  vsixName: $(VSIX_NAME)
-                  workingDirectory: $(Pipeline.Workspace)\\drop
-                  signType: $(SigningType)
+              # Conditionally sign within the same Build job (no separate stage)
+              - ${{ if eq(parameters.publishExtension, true) }}:
+                - powershell: |
+                    Write-Host 'Signing is enabled (publishExtension=true). Proceeding to run sign template.'
+                    Write-Host 'Contents of drop before signing:'
+                    Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
+                  displayName: Pre-sign inspection
+                - template: build/templates/sign.yml@self
+                  parameters:
+                    vsixName: $(VSIX_NAME)
+                    workingDirectory: $(Build.StagingDirectory)\drop
+                    signType: $(SigningType)
+                - powershell: |
+                    Write-Host 'Contents of drop after signing:'
+                    Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
+                  displayName: Post-sign inspection
 
              
