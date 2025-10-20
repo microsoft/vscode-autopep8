@@ -44,12 +44,13 @@ extends:
   parameters:
     sdl:
       sourceAnalysisPool: VSEngSS-MicroBuild2022-1ES
+      codeSignValidation:
+        enabled: true
       sbom:
         enabled: false  # Disable global SBOM generation; we'll enable selectively per artifact output
     pool:
       name: AzurePipelines-EO
-      image: 1ESPT-Ubuntu22.04
-      os: linux
+      os: windows
 
     customBuildTags:
       - ES365AIMigrationTooling
@@ -73,7 +74,7 @@ extends:
                   displayName: 'Publish Drop Artifact'
                   targetPath: '$(Build.StagingDirectory)\\drop'
                   artifactName: drop
-                  sbomEnabled: true  # Generate SBOM only for this artifact
+                  sbomEnabled: true
             steps:
               - task: NodeTool@0
                 inputs:
