@@ -152,8 +152,16 @@ extends:
                 - template: build/templates/sign.yml@self
                   parameters:
                     vsixName: $(VSIX_NAME)
-                    workingDirectory: $(Build.StagingDirectory)\drop
+                    workingDirectory: $(Build.SourcesDirectory)
                     signType: $(SigningType)
+                - powershell: |
+                    Write-Host 'Copying manifest and signature into drop for artifact inclusion.'
+                    $drop = "$(Build.StagingDirectory)\drop"
+                    $manifest = "$(Build.SourcesDirectory)\extension.manifest"
+                    $signature = "$(Build.SourcesDirectory)\extension.signature.p7s"
+                    if (Test-Path $manifest) { Copy-Item $manifest $drop -Force; Write-Host 'Copied manifest.' } else { Write-Warning 'Manifest not found at root.' }
+                    if (Test-Path $signature) { Copy-Item $signature $drop -Force; Write-Host 'Copied signature.' } else { Write-Warning 'Signature file not found at root.' }
+                  displayName: Stage signing artifacts to drop
                 - powershell: |
                     Write-Host 'Contents of drop after signing:'
                     Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
