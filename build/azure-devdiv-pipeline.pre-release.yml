@@ -133,14 +133,14 @@ extends:
                     Write-Warning 'dist folder not found; nothing to copy yet.'
                   }
                   if (Test-Path autopep8.vsix) {
-                    Write-Host 'Copying VSIX to drop...'
-                    Copy-Item autopep8.vsix "$(Build.StagingDirectory)\drop" -Force
+                    Write-Host 'Copying pre-sign VSIX to drop as autopep8.pre-sign.vsix...'
+                    Copy-Item autopep8.vsix "$(Build.StagingDirectory)\drop\autopep8.pre-sign.vsix" -Force
                   } else {
-                    Write-Warning 'autopep8.vsix not found; cannot copy to drop.'
+                    Write-Warning 'autopep8.vsix not found; cannot copy pre-sign artifact.'
                   }
-                  Write-Host 'Drop folder contents:'
+                  Write-Host 'Drop folder contents (pre-sign stage):'
                   Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
-                displayName: Stage build outputs to drop
+                displayName: Stage pre-sign build outputs to drop
 
               # Conditionally sign within the same Build job (no separate stage)
               - ${{ if eq(parameters.publishExtension, true) }}:
@@ -154,6 +154,38 @@ extends:
                     vsixName: $(VSIX_NAME)
                     workingDirectory: $(Build.SourcesDirectory)
                     signType: $(SigningType)
+                - script: npx vsce package -o autopep8.vsix
+                  displayName: Re-package VSIX after signing
+                - powershell: |
+                    $signed = 'autopep8.vsix'
+                    if (Test-Path $signed) {
+                      Write-Host 'Signed VSIX (post-sign repackage) details:'
+                      Get-Item $signed | Format-Table Name,Length,LastWriteTime -AutoSize
+                      Write-Host 'Copying signed VSIX to drop...'
+                      Copy-Item $signed "$(Build.StagingDirectory)\drop\autopep8.vsix" -Force
+                    } else {
+                      Write-Error 'Signed VSIX not found after repackage.'
+                      exit 1
+                    }
+                    Write-Host 'Drop folder contents (after copying signed VSIX):'
+                    Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
+                  displayName: Copy signed VSIX to drop
+                - powershell: |
+                    $prePath = "$(Build.StagingDirectory)\drop\autopep8.pre-sign.vsix"
+                    $postPath = "$(Build.StagingDirectory)\drop\autopep8.vsix"
+                    if (!(Test-Path $prePath)) { Write-Error "Pre-sign VSIX not found at $prePath"; exit 1 }
+                    if (!(Test-Path $postPath)) { Write-Error "Signed VSIX not found at $postPath"; exit 1 }
+                    $preHash = Get-FileHash $prePath -Algorithm SHA256
+                    $postHash = Get-FileHash $postPath -Algorithm SHA256
+                    Write-Host "Pre-sign VSIX SHA256: $($preHash.Hash)"
+                    Write-Host "Signed   VSIX SHA256: $($postHash.Hash)"
+                    if ($preHash.Hash -eq $postHash.Hash) {
+                      Write-Error 'Signed VSIX hash matches pre-sign VSIX hash (unexpected). Failing build.'
+                      exit 1
+                    } else {
+                      Write-Host 'Hashes differ as expected. Proceeding.'
+                    }
+                  displayName: Verify signed VSIX differs from pre-sign VSIX
                 - powershell: |
                     Write-Host 'Copying manifest and signature into drop for artifact inclusion.'
                     $drop = "$(Build.StagingDirectory)\drop"
