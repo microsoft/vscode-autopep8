@@ -17,8 +17,6 @@ resources:
       name: 1ESPipelineTemplates/MicroBuildTemplate
       ref: refs/tags/release
 variables:
-  - name: SigningType
-    value: 'real'
   - name: TeamName
     value: VSCode-autopep8
   # Artifact naming variables for signed outputs
@@ -67,7 +65,7 @@ extends:
               mb:
                 signing:
                   enabled: true
-                  signType: $(SigningType)
+                  signType: real
                   signWithProd: true
               outputs:
                 - output: pipelineArtifact
@@ -153,7 +151,7 @@ extends:
                   parameters:
                     vsixName: $(VSIX_NAME)
                     workingDirectory: $(Build.SourcesDirectory)
-                    signType: $(SigningType)
+                    signType: real
                 - script: npx vsce package -o autopep8.vsix
                   displayName: Re-package VSIX after signing
                 - powershell: |

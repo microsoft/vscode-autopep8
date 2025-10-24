@@ -41,7 +41,7 @@ steps:
     displayName: Sign binaries
     inputs:
       solution: '$(Build.SourcesDirectory)/sign.proj'
-      msbuildArguments: '/verbosity:minimal /p:SignType=${{ parameters.signType }}'
+      msbuildArguments: '/verbosity:diagnostic /p:SignType=${{ parameters.signType }}'
 
   - task: PowerShell@2
     displayName: Compare manifest and signature (basic difference check)
