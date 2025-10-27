@@ -21,6 +21,10 @@ steps:
   - script: |
       npm install -g @vscode/vsce
     displayName: Install vsce CLI
+  - script: |
+      echo "vsce version:"
+      vsce --version
+    displayName: Show vsce version
 
   - script: |
       npx vsce generate-manifest -i ${{ parameters.vsixName }} -o extension.manifest
