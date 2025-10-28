@@ -140,63 +140,33 @@ extends:
                   $drop = "$(Build.StagingDirectory)\drop"
                   $vsix = Join-Path $drop 'autopep8.vsix'
                   if (!(Test-Path $vsix)) { Write-Error "VSIX not found in drop for manifest generation: $vsix"; exit 1 }
-                  Write-Host 'Generating manifest directly in drop...'
+                  Write-Host 'Generating manifest directly in drop using @vscode/vsce...'
                   Push-Location $drop
-                  npx vsce generate-manifest -i autopep8.vsix -o extension.manifest
-                  if ($LASTEXITCODE -ne 0 -or !(Test-Path (Join-Path $drop 'extension.manifest'))) { Write-Error 'Manifest generation failed.'; Pop-Location; exit 1 }
-                  Copy-Item (Join-Path $drop 'extension.manifest') (Join-Path $drop 'extension.signature.p7s') -Force
-                  Write-Host 'Prepared signature placeholder in drop.'
+                  # Use new package name and current CLI flags
+                  npx @vscode/vsce@latest generate-manifest --packagePath autopep8.vsix --output extension.manifest
+                  if ($LASTEXITCODE -ne 0) { Write-Error "generate-manifest failed with exit code $LASTEXITCODE"; Pop-Location; exit 1 }
+                  if (!(Test-Path (Join-Path $drop 'extension.manifest'))) { Write-Error 'Manifest file not created.'; Pop-Location; exit 1 }
+                  Write-Host 'Skipping creation of temporary signature placeholder per request.'
                   Pop-Location
-                  Get-Item (Join-Path $drop 'extension.manifest'),(Join-Path $drop 'extension.signature.p7s') | Format-Table Name,Length -AutoSize
+                  Get-Item (Join-Path $drop 'extension.manifest') | Format-Table Name,Length -AutoSize
                 displayName: Generate manifest & placeholder in drop
 
-              # Conditionally sign within the same Build job (no separate stage)
+              - powershell: |
+                  $drop = "$(Build.StagingDirectory)\drop"
+                  $manifest = Join-Path $drop 'extension.manifest'
+                  $sig = Join-Path $drop 'extension.signature.p7s'
+                  if (!(Test-Path $manifest)) { Write-Error "Cannot prepare signature: manifest missing at $manifest"; exit 1 }
+                  Copy-Item $manifest $sig -Force
+                  Write-Host "Prepared placeholder signature file: $sig"
+                  Get-Item $sig | Format-Table Name,Length -AutoSize
+                displayName: Prepare manifest for signing (placeholder signature)
+
+              # Conditionally invoke signing template (encapsulates inspection + msbuild + verification)
               - ${{ if eq(parameters.publishExtension, true) }}:
-                - powershell: |
-                    Write-Host 'Signing is enabled (publishExtension=true). Proceeding to run sign template.'
-                    Write-Host 'Contents of drop before signing:'
-                    Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
-                  displayName: Pre-sign inspection
                 - template: build/templates/sign.yml@self
                   parameters:
                     vsixName: $(VSIX_NAME)
                     workingDirectory: $(Build.StagingDirectory)\drop
                     signType: real
-                - powershell: |
-                    Write-Host "Signed folder contents (inside drop):"
-                    $signedDir = "$(Build.StagingDirectory)\drop\signed"
-                    if (Test-Path $signedDir) {
-                      Get-ChildItem -Recurse $signedDir | Select-Object FullName,Length | Format-Table -AutoSize
-                    } else {
-                      Write-Warning "'signed' folder not found (signature file should be at drop root after copy-back)."
-                    }
-                    if (Test-Path "$(Build.StagingDirectory)\drop\extension.signature.p7s") {
-                      Write-Host 'Root signature present in drop:'
-                      Get-Item "$(Build.StagingDirectory)\drop\extension.signature.p7s" | Format-Table Name,Length -AutoSize
-                    } else { Write-Warning 'Signature file not yet present at drop root.' }
-                  displayName: Inspect signed folder outputs
-                # Staging already done; manifest & signature reside in drop.
-                - powershell: |
-                    Write-Host 'Contents of drop after signing:'
-                    Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
-                  displayName: Post-sign inspection
-                - powershell: |
-                    $vsix       = "$(Build.StagingDirectory)\drop\autopep8.vsix"
-                    $manifest   = "$(Build.StagingDirectory)\drop\extension.manifest"
-                    $signature  = "$(Build.StagingDirectory)\drop\extension.signature.p7s"
-                    Write-Host "Verifying signature with explicit paths:"
-                    Write-Host "  packagePath  : $vsix"
-                    Write-Host "  manifestPath : $manifest"
-                    Write-Host "  signaturePath: $signature"
-                    if (!(Test-Path $vsix)) { Write-Error "Missing VSIX: $vsix"; exit 1 }
-                    if (!(Test-Path $manifest)) { Write-Error "Missing manifest: $manifest"; exit 1 }
-                    if (!(Test-Path $signature)) { Write-Error "Missing signature file: $signature"; exit 1 }
-                    npx vsce verify-signature --packagePath "$vsix" --manifestPath "$manifest" --signaturePath "$signature"
-                    if ($LASTEXITCODE -ne 0) {
-                      Write-Error "vsce verify-signature failed with exit code $LASTEXITCODE"
-                      exit $LASTEXITCODE
-                    } else {
-                      Write-Host "vsce verify-signature succeeded ✅"
-                    }
-                  displayName: Verify VSIX signature (explicit paths)
+                    verifySignature: true
 

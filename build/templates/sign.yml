@@ -16,20 +16,16 @@ parameters:
   - name: signType
     type: string
     default: real
+  - name: verifySignature
+    type: boolean
+    default: true
 
 steps:
   - script: |
       npm install -g @vscode/vsce
-    displayName: Install vsce CLI
-  - script: |
       echo "vsce version:"
       vsce --version
-    displayName: Show vsce version
-
-  - script: |
-      npx vsce generate-manifest -i ${{ parameters.vsixName }} -o extension.manifest
-    displayName: Generate extension manifest
-    workingDirectory: ${{ parameters.workingDirectory }}
+    displayName: Install & show vsce CLI
 
   - task: NuGetToolInstaller@1
     displayName: Install NuGet
@@ -41,25 +37,63 @@ steps:
       restoreSolution: '$(Build.SourcesDirectory)/packages.config'
       restoreDirectory: '$(Build.SourcesDirectory)/packages'
 
-  - task: MSBuild@1
-    displayName: Sign binaries
-    inputs:
-      solution: '$(Build.SourcesDirectory)/sign.proj'
-      msbuildArguments: '/verbosity:diagnostic /p:SignType=${{ parameters.signType }}'
-
   - task: PowerShell@2
-    displayName: Compare manifest and signature (basic difference check)
+    displayName: Pre-sign inspection
     inputs:
       targetType: inline
       script: |
         $wd = "${{ parameters.workingDirectory }}"
-        $manifestPath = Join-Path $wd 'extension.manifest'
-        $signaturePath = Join-Path $wd 'extension.signature.p7s'
-        if (!(Test-Path $manifestPath)) { Write-Error "Manifest not found: $manifestPath"; exit 1 }
-        if (!(Test-Path $signaturePath)) { Write-Error "Signature file not found: $signaturePath"; exit 1 }
-        $compareResult = Compare-Object (Get-Content $manifestPath) (Get-Content $signaturePath)
-        if ($compareResult -eq $null) {
-          Write-Error "Files are identical (unexpected). Failing the build."; exit 1
+        Write-Host "Pre-sign contents of working directory: $wd"
+        Get-ChildItem -Recurse $wd | Select-Object FullName,Length | Format-Table -AutoSize
+        $vsix = Join-Path $wd "${{ parameters.vsixName }}"
+        if (!(Test-Path $vsix)) { Write-Error "VSIX missing: $vsix"; exit 1 }
+        $manifest = Join-Path $wd 'extension.manifest'
+        if (!(Test-Path $manifest)) { Write-Error "Manifest missing: $manifest"; exit 1 }
+        $sig = Join-Path $wd 'extension.signature.p7s'
+        if (!(Test-Path $sig)) { Write-Warning "Signature placeholder missing (will attempt signing anyway)." }
+
+  - task: MSBuild@1
+    displayName: Run signing (MSBuild)
+    inputs:
+      solution: '$(Build.SourcesDirectory)/sign.proj'
+      msbuildArguments: '/verbosity:minimal /p:SignType=${{ parameters.signType }}'
+
+  - task: PowerShell@2
+    displayName: Post-sign inspection
+    inputs:
+      targetType: inline
+      script: |
+        $wd = "${{ parameters.workingDirectory }}"
+        Write-Host "Post-sign file listing:"
+        Get-ChildItem $wd -File | Select-Object Name,Length | Format-Table -AutoSize
+        $sig = Join-Path $wd 'extension.signature.p7s'
+        if (Test-Path $sig) {
+          Write-Host "Signature file present: $sig"
         } else {
-          Write-Host "Files differ as expected. Signature file exists."; exit 0
+          Write-Warning "Signature file NOT present after signing step."; exit 0
         }
+
+  - ${{ if eq(parameters.verifySignature, true) }}:
+    - task: PowerShell@2
+      displayName: Verify VSIX signature
+      inputs:
+        targetType: inline
+        script: |
+          $wd = "${{ parameters.workingDirectory }}"
+          $vsix       = Join-Path $wd "${{ parameters.vsixName }}"
+          $manifest   = Join-Path $wd 'extension.manifest'
+          $signature  = Join-Path $wd 'extension.signature.p7s'
+          Write-Host "Verifying signature:"
+          Write-Host "  packagePath  : $vsix"
+          Write-Host "  manifestPath : $manifest"
+          Write-Host "  signaturePath: $signature"
+          if (!(Test-Path $vsix)) { Write-Error "Missing VSIX: $vsix"; exit 1 }
+          if (!(Test-Path $manifest)) { Write-Error "Missing manifest: $manifest"; exit 1 }
+          if (!(Test-Path $signature)) { Write-Error "Missing signature file: $signature"; exit 1 }
+          npx @vscode/vsce@latest verify-signature --packagePath "$vsix" --manifestPath "$manifest" --signaturePath "$signature"
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "vsce verify-signature failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+          } else {
+            Write-Host "vsce verify-signature succeeded ✅"
+          }

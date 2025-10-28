@@ -14,13 +14,7 @@
     </PropertyGroup>
   </Target>
 
-   <Target Name="CopySignatureFile" BeforeTargets="GetFilesToSign">
-    <Copy SourceFiles="$(ProjectDir)extension.manifest" DestinationFiles="$(OutDir)\extension.signature.p7s" />
-  </Target>
-
-  <Target Name="CopyBackSignatureFile" AfterTargets="SignFiles">
-    <Copy SourceFiles="$(OutDir)extension.signature.p7s" DestinationFiles="$(ProjectDir)extension.signature.p7s" />
-  </Target>
+  <!-- Removed CopySignatureFile and CopyBackSignatureFile: pipeline now prepares extension.signature.p7s directly in working directory -->
 
 
   <!-- This will be overridden if we're building with MicroBuild -->
