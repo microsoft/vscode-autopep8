@@ -130,11 +130,37 @@ extends:
                 displayName: Prepare manifest for signing
 
               # Conditionally invoke signing template (encapsulates inspection + msbuild + verification)
-              - ${{ if eq(parameters.publishExtension, true) }}:
-                - template: build/templates/sign.yml@self
+              - template: build/templates/sign.yml@self
+                parameters:
+                  vsixName: $(VSIX_NAME)
+                  workingDirectory: $(Build.StagingDirectory)\drop
+                  signType: real
+                  verifySignature: true
+
+      - ${{ if eq(parameters.publishExtension, true) }}:
+        - stage: Publish
+          displayName: Publish Extension
+          dependsOn: Build
+          jobs:
+            - job: Publish
+              displayName: Marketplace Publish Job
+              templateContext:
+                type: releaseJob
+                isProduction: true
+                inputs:
+                  - input: pipelineArtifact
+                    # Single consolidated artifact produced in Build stage
+                    artifactName: drop
+                    # Download into the expected publishFolder path used by publish.yml
+                    targetPath: $(Build.ArtifactStagingDirectory)\drop
+              steps:
+                - template: build/templates/publish.yml@self
                   parameters:
-                    vsixName: $(VSIX_NAME)
-                    workingDirectory: $(Build.StagingDirectory)\drop
-                    signType: real
-                    verifySignature: true
+                    azureSubscription: PylancePublishPipelineSecureConnectionWithManagedIdentity
+                    vsixName: autopep8.vsix
+                    manifestName: extension.manifest
+                    signatureName: extension.signature.p7s
+                    publishFolder: drop
+                    preRelease: false
+                    noVerify: true
 
