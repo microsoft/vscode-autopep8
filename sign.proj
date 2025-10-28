@@ -14,8 +14,7 @@
   </Target>
 
    <Target Name="CopySignatureFile" BeforeTargets="GetFilesToSign">
-    <Copy SourceFiles="$(ProjectDir)extension.manifest" DestinationFiles="$(OutDir)extension.signature.p7s" />
-    <Message Text="Prepared signature input: $(OutDir)extension.signature.p7s" Importance="high" />
+    <Copy SourceFiles="$(ProjectDir)extension.manifest" DestinationFiles="$(OutDir)\extension.signature.p7s" />
   </Target>
 
   <Target Name="CopyBackSignatureFile" AfterTargets="SignFiles">
