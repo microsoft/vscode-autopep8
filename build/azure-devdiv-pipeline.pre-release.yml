@@ -124,21 +124,31 @@ extends:
               - powershell: |
                   New-Item -ItemType Directory -Path "$(Build.StagingDirectory)\drop" -Force | Out-Null
                   Write-Host "Created drop folder: $(Build.StagingDirectory)\drop"
-                  if (Test-Path dist) {
-                    Write-Host 'Copying dist bundle to drop...'
-                    Copy-Item -Path dist -Destination "$(Build.StagingDirectory)\drop\dist" -Recurse -Force
-                  } else {
-                    Write-Warning 'dist folder not found; nothing to copy yet.'
-                  }
                   if (Test-Path autopep8.vsix) {
-                    Write-Host 'Copying pre-sign VSIX to drop as autopep8.pre-sign.vsix...'
-                    Copy-Item autopep8.vsix "$(Build.StagingDirectory)\drop\autopep8.pre-sign.vsix" -Force
-                  } else {
-                    Write-Warning 'autopep8.vsix not found; cannot copy pre-sign artifact.'
-                  }
-                  Write-Host 'Drop folder contents (pre-sign stage):'
+                    Write-Host 'Staging VSIX into drop...'
+                    Copy-Item autopep8.vsix "$(Build.StagingDirectory)\drop\autopep8.vsix" -Force
+                  } else { Write-Error 'VSIX missing after packaging.'; exit 1 }
+                  if (Test-Path dist) {
+                    Write-Host 'Staging dist bundle into drop (for debugging/source maps)...'
+                    Copy-Item dist "$(Build.StagingDirectory)\drop\dist" -Recurse -Force
+                  } else { Write-Warning 'dist folder not found; skipping.' }
+                  Write-Host 'Drop contents (initial staging):'
                   Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
-                displayName: Stage pre-sign build outputs to drop
+                displayName: Stage build outputs to drop
+
+              - powershell: |
+                  $drop = "$(Build.StagingDirectory)\drop"
+                  $vsix = Join-Path $drop 'autopep8.vsix'
+                  if (!(Test-Path $vsix)) { Write-Error "VSIX not found in drop for manifest generation: $vsix"; exit 1 }
+                  Write-Host 'Generating manifest directly in drop...'
+                  Push-Location $drop
+                  npx vsce generate-manifest -i autopep8.vsix -o extension.manifest
+                  if ($LASTEXITCODE -ne 0 -or !(Test-Path (Join-Path $drop 'extension.manifest'))) { Write-Error 'Manifest generation failed.'; Pop-Location; exit 1 }
+                  Copy-Item (Join-Path $drop 'extension.manifest') (Join-Path $drop 'extension.signature.p7s') -Force
+                  Write-Host 'Prepared signature placeholder in drop.'
+                  Pop-Location
+                  Get-Item (Join-Path $drop 'extension.manifest'),(Join-Path $drop 'extension.signature.p7s') | Format-Table Name,Length -AutoSize
+                displayName: Generate manifest & placeholder in drop
 
               # Conditionally sign within the same Build job (no separate stage)
               - ${{ if eq(parameters.publishExtension, true) }}:
@@ -150,48 +160,30 @@ extends:
                 - template: build/templates/sign.yml@self
                   parameters:
                     vsixName: $(VSIX_NAME)
-                    workingDirectory: $(Build.SourcesDirectory)
+                    workingDirectory: $(Build.StagingDirectory)\drop
                     signType: real
                 - powershell: |
-                    # No repackage: use original packaged VSIX as final artifact
-                    $vsix = "$(Build.SourcesDirectory)\autopep8.vsix"
-                    if (!(Test-Path $vsix)) { Write-Error "VSIX missing: $vsix"; exit 1 }
-                    Write-Host "Using original packaged VSIX as final:"
-                    Get-Item $vsix | Format-Table Name,Length,LastWriteTime -AutoSize
-                    Copy-Item $vsix "$(Build.StagingDirectory)\drop\autopep8.vsix" -Force
-                    Write-Host "Drop contents after copying VSIX:"
-                    Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
-                  displayName: Use original VSIX (no repackage)
-                - powershell: |
-                    $signed = 'autopep8.vsix'
-                    if (Test-Path $signed) {
-                      Write-Host 'Signed VSIX (post-sign repackage) details:'
-                      Get-Item $signed | Format-Table Name,Length,LastWriteTime -AutoSize
-                      Write-Host 'Copying signed VSIX to drop...'
-                      Copy-Item $signed "$(Build.StagingDirectory)\drop\autopep8.vsix" -Force
+                    Write-Host "Signed folder contents (inside drop):"
+                    $signedDir = "$(Build.StagingDirectory)\drop\signed"
+                    if (Test-Path $signedDir) {
+                      Get-ChildItem -Recurse $signedDir | Select-Object FullName,Length | Format-Table -AutoSize
                     } else {
-                      Write-Error 'Signed VSIX not found after repackage.'
-                      exit 1
+                      Write-Warning "'signed' folder not found (signature file should be at drop root after copy-back)."
                     }
-                    Write-Host 'Drop folder contents (after copying signed VSIX):'
-                    Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
-                  displayName: Copy signed VSIX to drop
-                - powershell: |
-                    Write-Host 'Copying manifest and signature into drop for artifact inclusion.'
-                    $drop = "$(Build.StagingDirectory)\drop"
-                    $manifest = "$(Build.SourcesDirectory)\extension.manifest"
-                    $signature = "$(Build.SourcesDirectory)\extension.signature.p7s"
-                    if (Test-Path $manifest) { Copy-Item $manifest $drop -Force; Write-Host 'Copied manifest.' } else { Write-Warning 'Manifest not found at root.' }
-                    if (Test-Path $signature) { Copy-Item $signature $drop -Force; Write-Host 'Copied signature.' } else { Write-Warning 'Signature file not found at root.' }
-                  displayName: Stage signing artifacts to drop
+                    if (Test-Path "$(Build.StagingDirectory)\drop\extension.signature.p7s") {
+                      Write-Host 'Root signature present in drop:'
+                      Get-Item "$(Build.StagingDirectory)\drop\extension.signature.p7s" | Format-Table Name,Length -AutoSize
+                    } else { Write-Warning 'Signature file not yet present at drop root.' }
+                  displayName: Inspect signed folder outputs
+                # Staging already done; manifest & signature reside in drop.
                 - powershell: |
                     Write-Host 'Contents of drop after signing:'
                     Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
                   displayName: Post-sign inspection
                 - powershell: |
                     $vsix       = "$(Build.StagingDirectory)\drop\autopep8.vsix"
-                    $manifest   = "$(Build.SourcesDirectory)\extension.manifest"
-                    $signature  = "$(Build.SourcesDirectory)\extension.signature.p7s"
+                    $manifest   = "$(Build.StagingDirectory)\drop\extension.manifest"
+                    $signature  = "$(Build.StagingDirectory)\drop\extension.signature.p7s"
                     Write-Host "Verifying signature with explicit paths:"
                     Write-Host "  packagePath  : $vsix"
                     Write-Host "  manifestPath : $manifest"
@@ -207,27 +199,4 @@ extends:
                       Write-Host "vsce verify-signature succeeded ✅"
                     }
                   displayName: Verify VSIX signature (explicit paths)
-                - powershell: |
-                    $src = "$(Build.SourcesDirectory)"
-                    $dist = Join-Path $src 'dist'
-                    Write-Host "Listing signature-related files:"
-                    $rootManifest = Join-Path $src 'extension.manifest'
-                    $rootSignature = Join-Path $src 'extension.signature.p7s'
-                    $distSignature = Join-Path $dist 'extension.signature.p7s'
-                    Get-Item $rootManifest,$rootSignature,$distSignature -ErrorAction SilentlyContinue | `
-                      Select-Object FullName,Length,LastWriteTime | Format-Table -AutoSize
-                    if ((Test-Path $rootSignature) -and (Test-Path $distSignature)) {
-                      $rootHash = (Get-FileHash $rootSignature -Algorithm SHA256).Hash
-                      $distHash = (Get-FileHash $distSignature -Algorithm SHA256).Hash
-                      Write-Host "Root signature hash: $rootHash"
-                      Write-Host "Dist signature hash: $distHash"
-                      if ($rootHash -eq $distHash) {
-                        Write-Host "Hashes match (expected)."
-                      } else {
-                        Write-Warning "Hashes differ (unexpected)."
-                      }
-                    } else {
-                      Write-Warning "One or both signature files missing; signing may have failed."
-                    }
-                  displayName: Inspect dist and root signature files
 

@@ -6,7 +6,8 @@
   <Target Name="SetSigningProperties">
     <PropertyGroup>
       <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-      <BaseOutputDirectory>dist\</BaseOutputDirectory>
+      <!-- Emit signing outputs directly into current working directory (pipeline passes drop as working dir) -->
+      <BaseOutputDirectory>.\</BaseOutputDirectory>
       <!-- These properties are required by MicroBuild, which only signs files that are under these paths -->
       <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(BaseOutputDirectory)/intermediate</IntermediateOutputPath>
       <OutDir Condition="'$(OutDir)' == ''">$(BaseOutputDirectory)</OutDir>
