@@ -43,6 +43,18 @@ parameters:
     default: true
 
 steps:
+  # Ensure deterministic Node & vsce environment before publishing
+  - task: NodeTool@0
+    displayName: Ensure Node 20 for publish
+    inputs:
+      versionSpec: '20.x'
+      checkLatest: true
+
+  - script: |
+      npm install -g @vscode/vsce@latest
+      echo "vsce version:"; vsce --version
+    displayName: Install vsce
+
   # Assumes files already present at $(Build.ArtifactStagingDirectory)/publishFolder
 
   - task: AzureCLI@2
@@ -80,10 +92,12 @@ steps:
 
         if ('${{ parameters.preRelease }}' -eq 'True') {
           Write-Host 'Publishing as pre-release'
-          # npx @vscode/vsce@latest publish --pat $aadToken --packagePath $vsixPath --manifestPath $manifestPath --signaturePath $signaturePath $extraFlags --pre-release
+          # disable for now
+          #npx @vscode/vsce@latest publish --pat $aadToken --packagePath $vsixPath --manifestPath $manifestPath --signaturePath $signaturePath $extraFlags --pre-release
         } else {
           Write-Host 'Publishing as stable release'
-          # npx @vscode/vsce@latest publish --pat $aadToken --packagePath $vsixPath --manifestPath $manifestPath --signaturePath $signaturePath $extraFlags
+          # disable for now
+          #npx @vscode/vsce@latest publish --pat $aadToken --packagePath $vsixPath --manifestPath $manifestPath --signaturePath $signaturePath $extraFlags
         }
 
         if ($LASTEXITCODE -ne 0) {

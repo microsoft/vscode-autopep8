@@ -141,6 +141,8 @@ extends:
         - stage: Publish
           displayName: Publish Extension
           dependsOn: Build
+          pool:
+            vmImage: ubuntu-latest
           jobs:
             - job: Publish
               displayName: Marketplace Publish Job
@@ -151,9 +153,10 @@ extends:
                   - input: pipelineArtifact
                     # Single consolidated artifact produced in Build stage
                     artifactName: drop
-                    # Download into the expected publishFolder path used by publish.yml
-                    targetPath: $(Build.ArtifactStagingDirectory)\drop
+                    # Download into the expected publishFolder path used by publish.yml                    
+                    targetPath: $(Build.ArtifactStagingDirectory)/drop
               steps:
+                - checkout: none
                 - template: build/templates/publish.yml@self
                   parameters:
                     azureSubscription: PylancePublishPipelineSecureConnectionWithManagedIdentity
