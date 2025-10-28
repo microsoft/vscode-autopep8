@@ -10,6 +10,12 @@ parameters:
   - name: vsixName
     type: string
     default: autopep8.vsix
+  - name: manifestName
+    type: string
+    default: extension.manifest
+  - name: signatureName
+    type: string
+    default: extension.signature.p7s
   - name: workingDirectory
     type: string
     default: '$(Build.SourcesDirectory)'
@@ -19,10 +25,14 @@ parameters:
   - name: verifySignature
     type: boolean
     default: true
+  - name: prepareRoot
+    type: boolean
+    default: true
+  # vsceVersion parameter removed (always use @vscode/vsce@latest explicitly)
 
 steps:
   - script: |
-      npm install -g @vscode/vsce
+      npm install -g @vscode/vsce@latest
       echo "vsce version:"
       vsce --version
     displayName: Install & show vsce CLI
@@ -43,14 +53,43 @@ steps:
       targetType: inline
       script: |
         $wd = "${{ parameters.workingDirectory }}"
+        $vsixName = "${{ parameters.vsixName }}"
+        $manifestName = "${{ parameters.manifestName }}"
+        $signatureName = "${{ parameters.signatureName }}"
         Write-Host "Pre-sign contents of working directory: $wd"
         Get-ChildItem -Recurse $wd | Select-Object FullName,Length | Format-Table -AutoSize
-        $vsix = Join-Path $wd "${{ parameters.vsixName }}"
+        $vsix = Join-Path $wd $vsixName
         if (!(Test-Path $vsix)) { Write-Error "VSIX missing: $vsix"; exit 1 }
-        $manifest = Join-Path $wd 'extension.manifest'
+        $manifest = Join-Path $wd $manifestName
         if (!(Test-Path $manifest)) { Write-Error "Manifest missing: $manifest"; exit 1 }
-        $sig = Join-Path $wd 'extension.signature.p7s'
+        $sig = Join-Path $wd $signatureName
         if (!(Test-Path $sig)) { Write-Warning "Signature placeholder missing (will attempt signing anyway)." }
+
+  - ${{ if eq(parameters.prepareRoot, true) }}:
+    - task: PowerShell@2
+      displayName: Prepare root files for MicroBuild signing
+      inputs:
+        targetType: inline
+        script: |
+          $wd = "${{ parameters.workingDirectory }}"
+          $root = "$(Build.SourcesDirectory)"
+          $manifestName = "${{ parameters.manifestName }}"
+          $signatureName = "${{ parameters.signatureName }}"
+          $manifestSrc = Join-Path $wd $manifestName
+          if (!(Test-Path $manifestSrc)) { Write-Error "Manifest not found in working directory: $manifestSrc"; exit 1 }
+          $manifestDest = Join-Path $root $manifestName
+          Copy-Item $manifestSrc $manifestDest -Force
+          Write-Host "Copied manifest to root: $manifestDest"
+          $sigSrc = Join-Path $wd $signatureName
+          if (!(Test-Path $sigSrc)) {
+            Write-Host "Signature placeholder missing; creating from manifest." 
+            Copy-Item $manifestDest (Join-Path $wd $signatureName) -Force
+            $sigSrc = Join-Path $wd $signatureName
+          }
+            $sigDest = Join-Path $root $signatureName
+            Copy-Item $sigSrc $sigDest -Force
+            Write-Host "Copied signature placeholder to root: $sigDest"
+            Get-Item $manifestDest,$sigDest | Format-Table Name,Length -AutoSize
 
   - task: MSBuild@1
     displayName: Run signing (MSBuild)
@@ -64,9 +103,10 @@ steps:
       targetType: inline
       script: |
         $wd = "${{ parameters.workingDirectory }}"
+        $signatureName = "${{ parameters.signatureName }}"
         Write-Host "Post-sign file listing:"
         Get-ChildItem $wd -File | Select-Object Name,Length | Format-Table -AutoSize
-        $sig = Join-Path $wd 'extension.signature.p7s'
+        $sig = Join-Path $wd $signatureName
         if (Test-Path $sig) {
           Write-Host "Signature file present: $sig"
         } else {
@@ -81,8 +121,8 @@ steps:
         script: |
           $wd = "${{ parameters.workingDirectory }}"
           $vsix       = Join-Path $wd "${{ parameters.vsixName }}"
-          $manifest   = Join-Path $wd 'extension.manifest'
-          $signature  = Join-Path $wd 'extension.signature.p7s'
+          $manifest   = Join-Path $wd "${{ parameters.manifestName }}"
+          $signature  = Join-Path $wd "${{ parameters.signatureName }}"
           Write-Host "Verifying signature:"
           Write-Host "  packagePath  : $vsix"
           Write-Host "  manifestPath : $manifest"
