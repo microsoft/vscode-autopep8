@@ -216,7 +216,7 @@ extends:
                     $distSignature = Join-Path $dist 'extension.signature.p7s'
                     Get-Item $rootManifest,$rootSignature,$distSignature -ErrorAction SilentlyContinue | `
                       Select-Object FullName,Length,LastWriteTime | Format-Table -AutoSize
-                    if (Test-Path $rootSignature -and Test-Path $distSignature) {
+                    if ((Test-Path $rootSignature) -and (Test-Path $distSignature)) {
                       $rootHash = (Get-FileHash $rootSignature -Algorithm SHA256).Hash
                       $distHash = (Get-FileHash $distSignature -Algorithm SHA256).Hash
                       Write-Host "Root signature hash: $rootHash"
