@@ -108,58 +108,26 @@ extends:
               - script: npm run package
                 displayName: Build extension
 
-              - script: npx vsce package -o autopep8.vsix
-                displayName: Package VSIX
-
               - powershell: |
-                  if (Test-Path autopep8.vsix) {
-                    Write-Host 'VSIX generated successfully:'
-                    Get-Item autopep8.vsix | Format-Table Name,Length,LastWriteTime -AutoSize
-                  } else {
-                    Write-Error 'VSIX was not generated.'
-                    exit 1
+                  $drop = "$(Build.StagingDirectory)\drop"
+                  New-Item -ItemType Directory -Path $drop -Force | Out-Null
+                  Write-Host "Packaging VSIX directly into drop: $drop\autopep8.vsix"
+                  npx @vscode/vsce@latest package -o "$drop\autopep8.vsix"
+                  if ($LASTEXITCODE -ne 0 -or -not (Test-Path "$drop\autopep8.vsix")) {
+                    Write-Error "VSIX packaging failed or file missing."; exit 1
                   }
-                displayName: Verify VSIX generated
-
-              - powershell: |
-                  New-Item -ItemType Directory -Path "$(Build.StagingDirectory)\drop" -Force | Out-Null
-                  Write-Host "Created drop folder: $(Build.StagingDirectory)\drop"
-                  if (Test-Path autopep8.vsix) {
-                    Write-Host 'Staging VSIX into drop...'
-                    Copy-Item autopep8.vsix "$(Build.StagingDirectory)\drop\autopep8.vsix" -Force
-                  } else { Write-Error 'VSIX missing after packaging.'; exit 1 }
                   if (Test-Path dist) {
-                    Write-Host 'Staging dist bundle into drop (for debugging/source maps)...'
-                    Copy-Item dist "$(Build.StagingDirectory)\drop\dist" -Recurse -Force
-                  } else { Write-Warning 'dist folder not found; skipping.' }
-                  Write-Host 'Drop contents (initial staging):'
-                  Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
-                displayName: Stage build outputs to drop
+                    Copy-Item dist "$drop\dist" -Recurse -Force
+                  }
+                  Write-Host "VSIX packaged successfully."
+                  Get-Item "$drop\autopep8.vsix" | Format-Table Name,Length,LastWriteTime -AutoSize
+                displayName: Package VSIX into drop
 
-              - powershell: |
-                  $drop = "$(Build.StagingDirectory)\drop"
-                  $vsix = Join-Path $drop 'autopep8.vsix'
-                  if (!(Test-Path $vsix)) { Write-Error "VSIX not found in drop for manifest generation: $vsix"; exit 1 }
-                  Write-Host 'Generating manifest directly in drop using @vscode/vsce...'
-                  Push-Location $drop
-                  # Use new package name and current CLI flags
-                  npx @vscode/vsce@latest generate-manifest --packagePath autopep8.vsix --output extension.manifest
-                  if ($LASTEXITCODE -ne 0) { Write-Error "generate-manifest failed with exit code $LASTEXITCODE"; Pop-Location; exit 1 }
-                  if (!(Test-Path (Join-Path $drop 'extension.manifest'))) { Write-Error 'Manifest file not created.'; Pop-Location; exit 1 }
-                  Write-Host 'Skipping creation of temporary signature placeholder per request.'
-                  Pop-Location
-                  Get-Item (Join-Path $drop 'extension.manifest') | Format-Table Name,Length -AutoSize
-                displayName: Generate manifest & placeholder in drop
+              - script: npx @vscode/vsce@latest generate-manifest -i "$(Build.StagingDirectory)\drop\autopep8.vsix" -o "$(Build.StagingDirectory)\drop\extension.manifest"
+                displayName: Generate extension manifest
 
-              - powershell: |
-                  $drop = "$(Build.StagingDirectory)\drop"
-                  $manifest = Join-Path $drop 'extension.manifest'
-                  $sig = Join-Path $drop 'extension.signature.p7s'
-                  if (!(Test-Path $manifest)) { Write-Error "Cannot prepare signature: manifest missing at $manifest"; exit 1 }
-                  Copy-Item $manifest $sig -Force
-                  Write-Host "Prepared placeholder signature file: $sig"
-                  Get-Item $sig | Format-Table Name,Length -AutoSize
-                displayName: Prepare manifest for signing (placeholder signature)
+              - script: copy "$(Build.StagingDirectory)\drop\extension.manifest" "$(Build.StagingDirectory)\drop\extension.signature.p7s"
+                displayName: Prepare manifest for signing
 
               # Conditionally invoke signing template (encapsulates inspection + msbuild + verification)
               - ${{ if eq(parameters.publishExtension, true) }}:
