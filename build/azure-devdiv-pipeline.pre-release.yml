@@ -188,4 +188,46 @@ extends:
                     Write-Host 'Contents of drop after signing:'
                     Get-ChildItem -Recurse "$(Build.StagingDirectory)\drop" | Select-Object FullName,Length | Format-Table -AutoSize
                   displayName: Post-sign inspection
+                - powershell: |
+                    $vsix       = "$(Build.StagingDirectory)\drop\autopep8.vsix"
+                    $manifest   = "$(Build.SourcesDirectory)\extension.manifest"
+                    $signature  = "$(Build.SourcesDirectory)\extension.signature.p7s"
+                    Write-Host "Verifying signature with explicit paths:"
+                    Write-Host "  packagePath  : $vsix"
+                    Write-Host "  manifestPath : $manifest"
+                    Write-Host "  signaturePath: $signature"
+                    if (!(Test-Path $vsix)) { Write-Error "Missing VSIX: $vsix"; exit 1 }
+                    if (!(Test-Path $manifest)) { Write-Error "Missing manifest: $manifest"; exit 1 }
+                    if (!(Test-Path $signature)) { Write-Error "Missing signature file: $signature"; exit 1 }
+                    npx vsce verify-signature --packagePath "$vsix" --manifestPath "$manifest" --signaturePath "$signature"
+                    if ($LASTEXITCODE -ne 0) {
+                      Write-Error "vsce verify-signature failed with exit code $LASTEXITCODE"
+                      exit $LASTEXITCODE
+                    } else {
+                      Write-Host "vsce verify-signature succeeded ✅"
+                    }
+                  displayName: Verify VSIX signature (explicit paths)
+                - powershell: |
+                    $src = "$(Build.SourcesDirectory)"
+                    $dist = Join-Path $src 'dist'
+                    Write-Host "Listing signature-related files:"
+                    $rootManifest = Join-Path $src 'extension.manifest'
+                    $rootSignature = Join-Path $src 'extension.signature.p7s'
+                    $distSignature = Join-Path $dist 'extension.signature.p7s'
+                    Get-Item $rootManifest,$rootSignature,$distSignature -ErrorAction SilentlyContinue | `
+                      Select-Object FullName,Length,LastWriteTime | Format-Table -AutoSize
+                    if (Test-Path $rootSignature -and Test-Path $distSignature) {
+                      $rootHash = (Get-FileHash $rootSignature -Algorithm SHA256).Hash
+                      $distHash = (Get-FileHash $distSignature -Algorithm SHA256).Hash
+                      Write-Host "Root signature hash: $rootHash"
+                      Write-Host "Dist signature hash: $distHash"
+                      if ($rootHash -eq $distHash) {
+                        Write-Host "Hashes match (expected)."
+                      } else {
+                        Write-Warning "Hashes differ (unexpected)."
+                      }
+                    } else {
+                      Write-Warning "One or both signature files missing; signing may have failed."
+                    }
+                  displayName: Inspect dist and root signature files
 
