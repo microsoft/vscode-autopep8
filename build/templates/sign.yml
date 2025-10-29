@@ -68,7 +68,7 @@ steps:
     displayName: Run signing (MSBuild)
     inputs:
       solution: '$(Build.SourcesDirectory)/build/sign.proj'
-      msbuildArguments: '/verbosity:minimal /p:SignType=${{ parameters.signType }} /p:BaseOutputDirectory=${{ parameters.workingDirectory }} /p:OutDir=${{ parameters.workingDirectory }} /p:IntermediateOutputPath=${{ parameters.workingDirectory }}\\intermediate'
+      msbuildArguments: '/verbosity:detailed /bl:"${{ parameters.workingDirectory }}\\signing.binlog" /p:SignType=${{ parameters.signType }} /p:BaseOutputDirectory=${{ parameters.workingDirectory }} /p:OutDir=${{ parameters.workingDirectory }} /p:IntermediateOutputPath=${{ parameters.workingDirectory }}\\intermediate'
 
   # No copy-back needed; signing outputs now land directly in workingDirectory.
 
