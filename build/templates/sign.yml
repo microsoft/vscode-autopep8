@@ -5,6 +5,7 @@
 #     vsixName: autopep8.vsix
 #     workingDirectory: $(Build.SourcesDirectory)
 #     signType: real
+# Note: vsce CLI expected to be installed by parent pipeline; no local install here.
 
 parameters:
   - name: vsixName
@@ -31,11 +32,7 @@ parameters:
   # vsceVersion parameter removed (always use @vscode/vsce@latest explicitly)
 
 steps:
-  - script: |
-      npm install -g @vscode/vsce@latest
-      echo "vsce version:"
-      vsce --version
-    displayName: Install & show vsce CLI
+  # vsce CLI expected to be installed by parent pipeline; no local install here.
 
   - task: NuGetToolInstaller@1
     displayName: Install NuGet
@@ -65,52 +62,15 @@ steps:
         $sig = Join-Path $wd $signatureName
         if (!(Test-Path $sig)) { Write-Warning "Signature placeholder missing (will attempt signing anyway)." }
 
-  - ${{ if eq(parameters.prepareRoot, true) }}:
-    - task: PowerShell@2
-      displayName: Prepare root files for MicroBuild signing
-      inputs:
-        targetType: inline
-        script: |
-          $wd = "${{ parameters.workingDirectory }}"
-          $root = "$(Build.SourcesDirectory)"
-          $manifestName = "${{ parameters.manifestName }}"
-          $signatureName = "${{ parameters.signatureName }}"
-          $manifestSrc = Join-Path $wd $manifestName
-          if (!(Test-Path $manifestSrc)) { Write-Error "Manifest not found in working directory: $manifestSrc"; exit 1 }
-          $manifestDest = Join-Path $root $manifestName
-          Copy-Item $manifestSrc $manifestDest -Force
-          Write-Host "Copied manifest to root: $manifestDest"
-          $sigSrc = Join-Path $wd $signatureName
-          if (!(Test-Path $sigSrc)) {
-            Write-Host "Signature placeholder missing; creating from manifest." 
-            Copy-Item $manifestDest (Join-Path $wd $signatureName) -Force
-            $sigSrc = Join-Path $wd $signatureName
-          }
-            $sigDest = Join-Path $root $signatureName
-            Copy-Item $sigSrc $sigDest -Force
-            Write-Host "Copied signature placeholder to root: $sigDest"
-            Get-Item $manifestDest,$sigDest | Format-Table Name,Length -AutoSize
+  # Deprecated prepareRoot step removed: we now sign directly in workingDirectory by overriding BaseOutputDirectory.
 
   - task: MSBuild@1
     displayName: Run signing (MSBuild)
     inputs:
-      solution: '$(Build.SourcesDirectory)/sign.proj'
-      msbuildArguments: '/verbosity:minimal /p:SignType=${{ parameters.signType }}'
+      solution: '$(Build.SourcesDirectory)/build/sign.proj'
+      msbuildArguments: '/verbosity:minimal /p:SignType=${{ parameters.signType }} /p:BaseOutputDirectory=${{ parameters.workingDirectory }} /p:OutDir=${{ parameters.workingDirectory }} /p:IntermediateOutputPath=${{ parameters.workingDirectory }}\\intermediate'
 
-  - task: PowerShell@2
-    displayName: Copy signed signature back to working directory
-    inputs:
-      targetType: inline
-      script: |
-        $wd = "${{ parameters.workingDirectory }}"
-        $root = "$(Build.SourcesDirectory)"
-        $signatureName = "${{ parameters.signatureName }}"
-        $rootSig = Join-Path $root $signatureName
-        if (!(Test-Path $rootSig)) { Write-Error "Signed signature not found at root: $rootSig"; exit 1 }
-        $wdSig = Join-Path $wd $signatureName
-        Copy-Item $rootSig $wdSig -Force
-        Write-Host "Copied signed signature to working directory: $wdSig"
-        Get-Item $rootSig,$wdSig | Select-Object FullName,Length,LastWriteTime | Format-Table -AutoSize
+  # No copy-back needed; signing outputs now land directly in workingDirectory.
 
   - task: PowerShell@2
     displayName: Post-sign inspection
@@ -165,7 +125,7 @@ steps:
           if (!(Test-Path $vsix)) { Write-Error "Missing VSIX: $vsix"; exit 1 }
           if (!(Test-Path $manifest)) { Write-Error "Missing manifest: $manifest"; exit 1 }
           if (!(Test-Path $signature)) { Write-Error "Missing signature file: $signature"; exit 1 }
-          npx @vscode/vsce@latest verify-signature --packagePath "$vsix" --manifestPath "$manifest" --signaturePath "$signature"
+          vsce verify-signature --packagePath "$vsix" --manifestPath "$manifest" --signaturePath "$signature"
           if ($LASTEXITCODE -ne 0) {
             Write-Error "vsce verify-signature failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE

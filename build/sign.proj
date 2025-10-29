@@ -6,8 +6,8 @@
   <Target Name="SetSigningProperties">
     <PropertyGroup>
       <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-      <!-- Emit signing outputs directly into current working directory (pipeline passes drop as working dir) -->
-      <BaseOutputDirectory>.\</BaseOutputDirectory>
+      <!-- Emit signing outputs into BaseOutputDirectory; allow override from MSBuild /p:BaseOutputDirectory=... -->
+      <BaseOutputDirectory Condition="'$(BaseOutputDirectory)' == ''">.\</BaseOutputDirectory>
       <!-- These properties are required by MicroBuild, which only signs files that are under these paths -->
       <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(BaseOutputDirectory)/intermediate</IntermediateOutputPath>
       <OutDir Condition="'$(OutDir)' == ''">$(BaseOutputDirectory)</OutDir>
@@ -25,10 +25,9 @@
 
   <Target Name="GetFilesToSign" BeforeTargets="SignFiles">
     <ItemGroup>
-     <FilesToSign Include="$(OutDir)extension.signature.p7s"> 
-        <!-- Add the certificate friendly name below -->
-        <Authenticode>VSCodePublisher</Authenticode> 
-     </FilesToSign> 
+      <FilesToSign Include="$(OutDir)extension.signature.p7s">
+        <Authenticode>VSCodePublisher</Authenticode>
+      </FilesToSign>
     </ItemGroup>
   </Target>
 

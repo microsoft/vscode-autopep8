@@ -19,6 +19,7 @@
 # - Azure DevOps Marketplace resource GUID (499b84ac-1321-427f-aa17-267ca6975798) is hardcoded in publish script.
 # - This uses Managed Identity via AzureCLI@2 to acquire an AAD token and passes it as a PAT.
 # - Requires extension artifacts already signed (signature file present).
+# - Node & vsce expected to be prepared by parent pipeline; omit local installation here.
 
 parameters:
   - name: azureSubscription
@@ -43,17 +44,7 @@ parameters:
     default: true
 
 steps:
-  # Ensure deterministic Node & vsce environment before publishing
-  - task: NodeTool@0
-    displayName: Ensure Node 20 for publish
-    inputs:
-      versionSpec: '20.x'
-      checkLatest: true
-
-  - script: |
-      npm install -g @vscode/vsce@latest
-      echo "vsce version:"; vsce --version
-    displayName: Install vsce
+  # Node & vsce expected to be prepared by parent pipeline; omit local installation.
 
   # Assumes files already present at $(Build.ArtifactStagingDirectory)/publishFolder
 

@@ -80,6 +80,12 @@ extends:
                   checkLatest: true
                 displayName: Select Node 20 LTS
 
+              - script: |
+                  npm install -g @vscode/vsce@latest
+                  echo "Global vsce version:"
+                  vsce --version
+                displayName: Install global vsce CLI
+
               - task: UsePythonVersion@0
                 inputs:
                   versionSpec: '3.13'
