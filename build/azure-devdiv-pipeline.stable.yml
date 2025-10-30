@@ -76,7 +76,7 @@ extends:
             steps:
               - task: NodeTool@0
                 inputs:
-                  versionSpec: '20.x'
+                  versionSpec: '22.x'
                   checkLatest: true
                 displayName: Select Node 20 LTS
               - task: UsePythonVersion@0

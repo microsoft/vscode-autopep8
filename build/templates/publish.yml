@@ -95,11 +95,11 @@ steps:
         if ('${{ parameters.preRelease }}' -eq 'True') {
           Write-Host 'Publishing as pre-release'
           # disabled for now; uncomment when ready
-          # vsce publish --pat $aadToken --packagePath $vsixPath --manifestPath $manifestPath --signaturePath $signaturePath $extraFlags --pre-release
+          npx vsce publish --pat $aadToken --packagePath $vsixPath --manifestPath $manifestPath --signaturePath $signaturePath $extraFlags --pre-release
         } else {
           Write-Host 'Publishing as stable release'
           # disabled for now; uncomment when ready
-          # vsce publish --pat $aadToken --packagePath $vsixPath --manifestPath $manifestPath --signaturePath $signaturePath $extraFlags
+          npx vsce publish --pat $aadToken --packagePath $vsixPath --manifestPath $manifestPath --signaturePath $signaturePath $extraFlags
         }
 
         if ($LASTEXITCODE -ne 0) {
