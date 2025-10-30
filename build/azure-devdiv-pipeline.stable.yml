@@ -150,6 +150,6 @@ extends:
                     manifestName: extension.manifest
                     signatureName: extension.signature.p7s
                     publishFolder: drop
-                    preRelease: true
+                    preRelease: false
                     noVerify: true
 
