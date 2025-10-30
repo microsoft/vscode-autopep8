@@ -131,9 +131,7 @@ extends:
 
               - script: npx @vscode/vsce@latest generate-manifest -i "$(Build.StagingDirectory)\drop\autopep8.vsix" -o "$(Build.StagingDirectory)\drop\extension.manifest"
                 displayName: Generate extension manifest
-
-              - script: copy "$(Build.StagingDirectory)\drop\extension.manifest" "$(Build.StagingDirectory)\drop\extension.signature.p7s"
-                displayName: Prepare manifest for signing
+              # Placeholder signature file now created inside MSBuild via CopySignatureFile target (sign.proj)
 
               # Conditionally invoke signing template (encapsulates inspection + msbuild + verification)
               - template: build/templates/sign.yml@self
