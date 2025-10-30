@@ -108,9 +108,6 @@ extends:
               - script: python -m nox --session install_bundled_libs
                 displayName: Install Python dependencies
 
-              - script: nuget restore build\sign.proj -Verbosity detailed
-                displayName: Restore signing packages (MicroBuild)
-
               - script: python ./build/update_ext_version.py --for-publishing
                 displayName: Update build number
 
