@@ -17,9 +17,10 @@
   <!-- Removed CopySignatureFile and CopyBackSignatureFile: pipeline now prepares extension.signature.p7s directly in working directory -->
 
 
-  <!-- This will be overridden if we're building with MicroBuild -->
+  <!-- SignFiles now fails fast if MicroBuild signing targets are missing -->
   <Target Name="SignFiles">
-    <Message Text="Fake sign target" Importance="high" />
+    <Error Condition="!Exists('packages\Microsoft.VisualStudioEng.MicroBuild.Core.1.0.0\build\Microsoft.VisualStudioEng.MicroBuild.Core.targets')" Text="MicroBuild signing targets missing. Run NuGet restore before invoking MSBuild (packages.config)." />
+    <Message Condition="Exists('packages\Microsoft.VisualStudioEng.MicroBuild.Core.1.0.0\build\Microsoft.VisualStudioEng.MicroBuild.Core.targets')" Text="MicroBuild signing targets detected; delegating signing to imported targets." Importance="high" />
   </Target>
 
 
