@@ -70,7 +70,7 @@ extends:
               outputs:
                 - output: pipelineArtifact
                   displayName: 'Publish Drop Artifact'
-                  targetPath: '$(Build.StagingDirectory)\\drop'
+                  targetPath: '$(Build.StagingDirectory)\drop'
                   artifactName: drop
                   sbomEnabled: true
             steps:
@@ -79,12 +79,6 @@ extends:
                   versionSpec: '20.x'
                   checkLatest: true
                 displayName: Select Node 20 LTS
-
-              - script: |
-                  npm install -g @vscode/vsce@latest
-                  echo "Global vsce version:"
-                  vsce --version
-                displayName: Install global vsce CLI
 
               - task: UsePythonVersion@0
                 inputs:
@@ -131,9 +125,7 @@ extends:
 
               - script: npx @vscode/vsce@latest generate-manifest -i "$(Build.StagingDirectory)\drop\autopep8.vsix" -o "$(Build.StagingDirectory)\drop\extension.manifest"
                 displayName: Generate extension manifest
-              # Placeholder signature file now created inside MSBuild via CopySignatureFile target (sign.proj)
 
-              # Conditionally invoke signing template (encapsulates inspection + msbuild + verification)
               - template: build/templates/sign.yml@self
                 parameters:
                   vsixName: $(VSIX_NAME)
@@ -141,7 +133,6 @@ extends:
                   signType: real
                   verifySignature: true
 
-              # Optional publish step (runs only when publishExtension=true)
               - ${{ if eq(parameters.publishExtension, true) }}:
                 - template: build/templates/publish.yml@self
                   parameters:
