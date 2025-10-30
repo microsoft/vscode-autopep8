@@ -111,7 +111,7 @@ extends:
                   $drop = "$(Build.StagingDirectory)\drop"
                   New-Item -ItemType Directory -Path $drop -Force | Out-Null
                   Write-Host "Packaging VSIX directly into drop: $drop\autopep8.vsix"
-                  npx @vscode/vsce@latest package -o "$drop\autopep8.vsix"
+                  npx vsce package -o "$drop\autopep8.vsix"
                   if ($LASTEXITCODE -ne 0 -or -not (Test-Path "$drop\autopep8.vsix")) {
                     Write-Error "VSIX packaging failed or file missing."; exit 1
                   }
@@ -122,7 +122,7 @@ extends:
                   Get-Item "$drop\autopep8.vsix" | Format-Table Name,Length,LastWriteTime -AutoSize
                 displayName: Package VSIX into drop
 
-              - script: npx @vscode/vsce@latest generate-manifest -i "$(Build.StagingDirectory)\drop\autopep8.vsix" -o "$(Build.StagingDirectory)\drop\extension.manifest"
+              - script: npx vsce generate-manifest -i "$(Build.StagingDirectory)\drop\autopep8.vsix" -o "$(Build.StagingDirectory)\drop\extension.manifest"
                 displayName: Generate extension manifest
 
               - template: build/templates/sign.yml@self

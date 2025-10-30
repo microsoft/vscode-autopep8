@@ -5,7 +5,7 @@
 #     vsixName: autopep8.vsix
 #     workingDirectory: $(Build.SourcesDirectory)
 #     signType: real
-# Note: vsce CLI expected to be installed by parent pipeline; no local install here.
+# Note: vsce CLI is invoked via 'npx vsce' (devDependency), no global install required.
 
 parameters:
   - name: vsixName
@@ -29,7 +29,7 @@ parameters:
   - name: prepareRoot
     type: boolean
     default: true
-  # vsceVersion parameter removed (always use @vscode/vsce@latest explicitly)
+  # vsceVersion parameter removed; rely on pinned devDependency version via npx.
 
 steps:
   # vsce CLI expected to be installed by parent pipeline; no local install here.
@@ -125,7 +125,7 @@ steps:
           if (!(Test-Path $vsix)) { Write-Error "Missing VSIX: $vsix"; exit 1 }
           if (!(Test-Path $manifest)) { Write-Error "Missing manifest: $manifest"; exit 1 }
           if (!(Test-Path $signature)) { Write-Error "Missing signature file: $signature"; exit 1 }
-          vsce verify-signature --packagePath "$vsix" --manifestPath "$manifest" --signaturePath "$signature"
+          npx vsce verify-signature --packagePath "$vsix" --manifestPath "$manifest" --signaturePath "$signature"
           if ($LASTEXITCODE -ne 0) {
             Write-Error "vsce verify-signature failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE
