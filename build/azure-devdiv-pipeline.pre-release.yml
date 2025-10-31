@@ -18,18 +18,7 @@ resources:
       ref: refs/tags/release
 variables:
   - name: TeamName
-    value: VSCode-autopep8
-  # Artifact naming variables for signed outputs
-  - name: VSIX_NAME
-    value: autopep8.vsix
-  - name: ARTIFACT_NAME_VSIX
-    value: signed-vsix
-  - name: ARTIFACT_NAME_SOURCE_MAPS_PKG
-    value: source-maps
-  - name: AUTOPEP8_MANIFEST_NAME
-    value: extension.manifest
-  - name: AUTOPEP8_SIGNATURE_NAME
-    value: extension.signature.p7s
+    value: VSCode-autopep8    
 
 parameters:
   - name: publishExtension
@@ -109,26 +98,15 @@ extends:
                 displayName: Build extension
 
               - powershell: |
-                  $drop = "$(Build.StagingDirectory)\drop"
-                  New-Item -ItemType Directory -Path $drop -Force | Out-Null
-                  Write-Host "Packaging VSIX directly into drop: $drop\autopep8.vsix"
-                  npx vsce package -o "$drop\autopep8.vsix"
-                  if ($LASTEXITCODE -ne 0 -or -not (Test-Path "$drop\autopep8.vsix")) {
-                    Write-Error "VSIX packaging failed or file missing."; exit 1
-                  }
-                  if (Test-Path dist) {
-                    Copy-Item dist "$drop\dist" -Recurse -Force
-                  }
-                  Write-Host "VSIX packaged successfully."
-                  Get-Item "$drop\autopep8.vsix" | Format-Table Name,Length,LastWriteTime -AutoSize
-                displayName: Package VSIX into drop
+                  cp "$(Build.StagingDirectory)\autopep8.vsix" "$(Build.StagingDirectory)\drop\autopep8.vsix"
+                displayName: Copy VSIX into drop
 
               - script: npx vsce generate-manifest -i "$(Build.StagingDirectory)\drop\autopep8.vsix" -o "$(Build.StagingDirectory)\drop\extension.manifest"
                 displayName: Generate extension manifest
 
               - template: build/templates/sign.yml@self
                 parameters:
-                  vsixName: $(VSIX_NAME)
+                  vsixName: autopep8.vsix
                   workingDirectory: $(Build.StagingDirectory)\drop
                   signType: real
                   verifySignature: true
