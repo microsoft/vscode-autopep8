@@ -94,14 +94,11 @@ extends:
               - script: python ./build/update_ext_version.py --for-publishing
                 displayName: Update build number
 
-              - script: npm run package
-                displayName: Build extension
-
               - script: npm run vsce-package
                 displayName: Build VSIX
 
               - powershell: |
-                  cp "$(Build.StagingDirectory)\autopep8.vsix" "$(Build.StagingDirectory)\drop\autopep8.vsix"
+                  cp "autopep8.vsix" "$(Build.StagingDirectory)\drop\autopep8.vsix"
                 displayName: Copy VSIX into drop
 
               - script: npx vsce generate-manifest -i "$(Build.StagingDirectory)\drop\autopep8.vsix" -o "$(Build.StagingDirectory)\drop\extension.manifest"
