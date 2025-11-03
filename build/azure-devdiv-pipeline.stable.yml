@@ -19,6 +19,8 @@ resources:
 variables:
   - name: TeamName
     value: VSCode-autopep8
+  - name: VsixName
+    value: autopep8.vsix
   
 parameters:
   - name: publishExtension
@@ -97,15 +99,15 @@ extends:
                 displayName: Build extension
 
                - powershell: |
-                  cp "$(Build.StagingDirectory)\autopep8.vsix" "$(Build.StagingDirectory)\drop\autopep8.vsix"
+                  New-Item -ItemType Directory -Path "$(Build.StagingDirectory)\drop" -Force | Out-Null; Copy-Item "$(Build.SourcesDirectory)\$(VsixName)" "$(Build.StagingDirectory)\drop\$(VsixName)" -Force; if (!(Test-Path "$(Build.StagingDirectory)\drop\$(VsixName)")) { Write-Error 'VSIX copy failed'; exit 1 }; Get-Item "$(Build.StagingDirectory)\drop\$(VsixName)" | Format-Table Name,Length,LastWriteTime -AutoSize
                 displayName: Copy VSIX into drop
 
-              - script: npx vsce generate-manifest -i "$(Build.StagingDirectory)\drop\autopep8.vsix" -o "$(Build.StagingDirectory)\drop\extension.manifest"
+              - script: npx vsce generate-manifest -i "$(Build.StagingDirectory)\drop\$(VsixName)" -o "$(Build.StagingDirectory)\drop\extension.manifest"
                 displayName: Generate extension manifest
 
               - template: build/templates/sign.yml@self
                 parameters:
-                  vsixName: autopep8.vsix
+                  vsixName: $(VsixName)
                   workingDirectory: $(Build.StagingDirectory)\drop
                   signType: real
                   verifySignature: true
@@ -114,7 +116,7 @@ extends:
                 - template: build/templates/publish.yml@self
                   parameters:
                     azureSubscription: PylancePublishPipelineSecureConnectionWithManagedIdentity
-                    vsixName: autopep8.vsix
+                    vsixName: $(VsixName)
                     manifestName: extension.manifest
                     signatureName: extension.signature.p7s
                     publishFolder: drop
