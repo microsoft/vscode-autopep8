@@ -88,7 +88,7 @@ extends:
               - script: python -m nox --session install_bundled_libs
                 displayName: Install Python dependencies
 
-              - script: python ./build/update_ext_version.py --for-publishing
+              - script: python ./build/update_ext_version.py --release --for-publishing
                 displayName: Update build number
 
               - script: npm run package
