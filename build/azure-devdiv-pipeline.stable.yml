@@ -89,7 +89,7 @@ extends:
               - script: python ./build/update_ext_version.py --release --for-publishing
                 displayName: Update build number
 
-              - script: npm run package
+              - script: npm run vsce-package
                 displayName: Build extension
 
                - powershell: |
