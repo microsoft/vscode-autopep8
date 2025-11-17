@@ -66,13 +66,13 @@ extends:
             steps:
               - task: NodeTool@0
                 inputs:
-                  versionSpec: '22.x'
+                  versionSpec: '16.17.0'
                   checkLatest: true
-                displayName: Select Node 20 LTS
+                displayName: Select Node 16 LTS
 
               - task: UsePythonVersion@0
                 inputs:
-                  versionSpec: '3.13'
+                  versionSpec: '3.9'
                   addToPath: true
                   architecture: 'x64'
                 displayName: Select Python version
