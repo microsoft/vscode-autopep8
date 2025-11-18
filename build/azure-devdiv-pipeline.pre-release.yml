@@ -70,7 +70,6 @@ extends:
                 inputs:
                   workingFile: .npmrc
               
-              # Add this step to verify the registry URL
               - script: npm config get registry
                 displayName: Verify NPM Registry
 
