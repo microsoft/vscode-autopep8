@@ -1,6 +1,7 @@
 .vscode/**
 .vscode-test/**
 out/**
+build/
 node_modules/**
 src/**
 .gitignore
