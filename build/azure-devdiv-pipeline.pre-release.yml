@@ -66,6 +66,11 @@ extends:
                   artifactName: drop
                   sbomEnabled: true
             steps:
+              - script: |
+                  echo "registry=$(AZURE_ARTIFACTS_FEED)" > .npmrc
+                  echo "always-auth=true" >> .npmrc
+                displayName: 'Configure .npmrc for Private Feed'
+
               - task: npmAuthenticate@0
                 inputs:
                   workingFile: .npmrc
