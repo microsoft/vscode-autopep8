@@ -104,7 +104,7 @@ extends:
               - script: python ./build/update_ext_version.py --for-publishing
                 displayName: Update build number
 
-              - script: npm run vsce-package
+              - script: npm run vsce-package-pre
                 displayName: Build VSIX
 
               - powershell: |
