@@ -105,6 +105,7 @@ extends:
                   workingDirectory: $(Build.StagingDirectory)\drop
                   signType: real
                   verifySignature: true
+                  teamName: $(TeamName)
 
               - ${{ if eq(parameters.publishExtension, true) }}:
                 - template: build/templates/publish.yml@self
