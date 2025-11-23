@@ -59,6 +59,7 @@ extends:
                   enabled: true
                   signType: real
                   signWithProd: true
+                  azurePMESubscription: beb8cb23-b303-4c95-ab26-9e44bc958d39
               outputs:
                 - output: pipelineArtifact
                   displayName: 'Publish Drop Artifact'
