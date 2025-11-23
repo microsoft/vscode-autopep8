@@ -59,6 +59,9 @@ steps:
     displayName: Enable MicroBuild Signing
     inputs:
       signType: ${{ parameters.signType }}   # 'real' or 'test'
+    env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+        TeamName: $(teamName)
       # Optional PME enforcement flags can go here if required by policy
 
   - task: MSBuild@1
