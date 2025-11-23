@@ -1,3 +1,10 @@
+# Template: Sign and validate VS Code extension artifacts
+# Usage Example:
+# - template: build/templates/sign.yml@self
+#   parameters:
+#     vsixName: autopep8.vsix
+#     workingDirectory: $(Build.SourcesDirectory)
+#     signType: real
 parameters:
   - name: vsixName
     type: string
@@ -65,7 +72,6 @@ steps:
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       TeamName: ${{ parameters.teamName }}
-      # Optional PME enforcement flags can go here if required by policy
 
   - task: MSBuild@1
     displayName: Run signing (MSBuild)
@@ -132,10 +138,10 @@ steps:
             if (!(Test-Path $vsix)) { Write-Error "Missing VSIX: $vsix"; exit 1 }
             if (!(Test-Path $manifest)) { Write-Error "Missing manifest: $manifest"; exit 1 }
             if (!(Test-Path $signature)) { Write-Error "Missing signature file: $signature"; exit 1 }
-            npx vsce verify-signature --packagePath "$vsix" --manifestPath "$manifest" --signaturePath "$signature"
+            npx @vscode/vsce verify-signature --packagePath "$vsix" --manifestPath "$manifest" --signaturePath "$signature"
             if ($LASTEXITCODE -ne 0) {
               Write-Error "vsce verify-signature failed with exit code $LASTEXITCODE"
-                           exit $LASTEXITCODE
+              exit $LASTEXITCODE
             } else {
               Write-Host "vsce verify-signature succeeded ✅"
             }
