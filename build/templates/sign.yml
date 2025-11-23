@@ -64,7 +64,7 @@ steps:
       ConnectedPMEServiceName: 6cc74545-d7b9-4050-9dfa-ebefcc8961ea
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-      TeamName: $(teamName)
+      TeamName: ${{ parameters.teamName }}
       # Optional PME enforcement flags can go here if required by policy
 
   - task: MSBuild@1
