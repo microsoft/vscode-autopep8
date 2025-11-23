@@ -59,7 +59,6 @@ extends:
                   enabled: true
                   signType: real
                   signWithProd: true
-                  azurePMESubscription: beb8cb23-b303-4c95-ab26-9e44bc958d39
               outputs:
                 - output: pipelineArtifact
                   displayName: 'Publish Drop Artifact'
@@ -70,7 +69,7 @@ extends:
               - task: npmAuthenticate@0
                 inputs:
                   workingFile: .npmrc
-              
+
               - script: npm config get registry
                 displayName: Verify NPM Registry
 
@@ -131,4 +130,4 @@ extends:
                       manifestName: extension.manifest
                       signatureName: extension.signature.p7s
                       publishFolder: drop
-                      preRelease: true                      
+                      preRelease: true

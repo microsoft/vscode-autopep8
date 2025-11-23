@@ -1,4 +1,3 @@
-
 parameters:
   - name: vsixName
     type: string
@@ -58,10 +57,14 @@ steps:
   - task: MicroBuildSigningPlugin@4
     displayName: Enable MicroBuild Signing
     inputs:
-      signType: ${{ parameters.signType }}   # 'real' or 'test'
+      signType: ${{ parameters.signType }} # 'real' or 'test'
+      zipSources: false
+      feedSource: 'https://devdiv.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
+      ConnectedServiceName: 'MicroBuild Signing Task (DevDiv)'
+      ConnectedPMEServiceName: beb8cb23-b303-4c95-ab26-9e44bc958d39
     env:
-        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-        TeamName: $(teamName)
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      TeamName: $(teamName)
       # Optional PME enforcement flags can go here if required by policy
 
   - task: MSBuild@1
