@@ -69,7 +69,7 @@ extends:
               - task: npmAuthenticate@0
                 inputs:
                   workingFile: .npmrc
-              
+
               - script: npm config get registry
                 displayName: Verify NPM Registry
 
@@ -120,6 +120,7 @@ extends:
                   workingDirectory: $(Build.StagingDirectory)\drop
                   signType: real
                   verifySignature: true
+                  teamName: $(TeamName)
 
               - ${{ if eq(parameters.publishExtension, true) }}:
                   - template: build/templates/publish.yml@self
@@ -129,4 +130,4 @@ extends:
                       manifestName: extension.manifest
                       signatureName: extension.signature.p7s
                       publishFolder: drop
-                      preRelease: true                      
+                      preRelease: true
