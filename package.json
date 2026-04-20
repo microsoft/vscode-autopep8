@@ -2,7 +2,7 @@
     "name": "autopep8",
     "displayName": "autopep8",
     "description": "%extension.description%",
-    "version": "2025.3.0",
+    "version": "2026.3.0-dev",
     "preview": true,
     "serverInfo": {
         "name": "autopep8",
@@ -194,7 +194,7 @@
         "prettier": "^3.2.5",
         "ts-loader": "^9.5.1",
         "typescript": "^5.4.3",
-        "webpack": "^5.91.0",
+        "webpack": "^5.105.3",
         "webpack-cli": "^5.1.4"
     }
 }
