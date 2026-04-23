@@ -68,6 +68,8 @@ git checkout -b release/2026.4
 git push upstream release/2026.4
 ```
 
+The stable release pipeline triggers automatically when the release branch is pushed to upstream.
+
 > ✋ **Confirm**: Is the release branch pushed to upstream?
 
 ---
@@ -98,9 +100,9 @@ Goal: Keep `main` moving forward on an odd minor with `-dev` suffix.
 
 ---
 
-### Phase 4 — Tag and trigger the pipeline
+### Phase 4 — Tag the release
 
-Goal: Push a tag from the release branch to trigger the [stable pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=27666).
+Goal: Tag the release commit for GitHub release tracking.
 
 Replace `release/2026.4` and `v2026.4.0` with the actual branch and version:
 ```
@@ -111,11 +113,11 @@ git tag v2026.4.0
 git push upstream v2026.4.0
 ```
 
-The pipeline triggers automatically on the new tag. Navigate to [Azure DevOps #27666](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=27666) to monitor the run.
+The tag marks the release for GitHub. The pipeline was already triggered by the release branch push in Phase 2. Navigate to the stable pipeline in Azure DevOps to monitor progress.
 
 When the pipeline completes signing, it will pause for manual validation before publishing. Approve to publish to the VS Code Marketplace.
 
-> ✋ **Confirm**: Has the tag been pushed and the pipeline started?
+> ✋ **Confirm**: Has the tag been pushed and is the pipeline running?
 
 ---
 
