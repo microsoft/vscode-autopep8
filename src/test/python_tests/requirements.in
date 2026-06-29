@@ -2,9 +2,11 @@
 # To update requirements.txt, run the following commands.
 # Use `uv` with Python 3.9 when creating the environment.
 # Run following command:
-# uv pip compile --generate-hashes --upgrade -o ./src/test/python_tests/requirements.txt ./src/test/python_tests/requirements.in
+# uv pip compile --universal --generate-hashes --upgrade -o ./src/test/python_tests/requirements.txt ./src/test/python_tests/requirements.in
 pygls
 pytest
 PyHamcrest
 python-jsonrpc-server
 colorama # required for windows machines
+ujson==5.11.0; python_version < "3.10"
+ujson==5.12.1; python_version >= "3.10"
