@@ -61,7 +61,7 @@
         "compile-tests": "tsc -p . --outDir out",
         "watch-tests": "tsc -p . -w --outDir out",
         "pretest": "npm run compile-tests && npm run compile && npm run lint",
-        "lint": "eslint src --ext ts",
+        "lint": "eslint src",
         "format-check": "prettier --check src/**/*.ts build/**/*.yml .github/**/*.yml",
         "fix-format": "prettier --write src/**/*.ts build/**/*.yml .github/**/*.yml",
         "test": "node ./out/test/runTest.js",
