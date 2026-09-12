@@ -108,7 +108,7 @@ export async function restartServer(
 
     traceInfo(`Server: Start requested.`);
     _disposables.push(
-        newLSClient.onDidChangeState((e) => {
+        newLSClient.onDidChangeState((e: { newState: State }) => {
             switch (e.newState) {
                 case State.Stopped:
                     traceVerbose(`Server State: Stopped`);
