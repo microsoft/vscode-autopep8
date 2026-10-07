@@ -10,12 +10,9 @@ updates:
       - 'debt'
       - 'no-changelog'
     groups:
-      npm-minor-patch:
+      all-npm:
         patterns:
           - '*'
-        update-types:
-          - 'minor'
-          - 'patch'
     open-pull-requests-limit: 10
     cooldown:
       # Delay updates beyond the highest-risk window after a release.
@@ -36,12 +33,9 @@ updates:
       - 'debt'
       - 'no-changelog'
     groups:
-      pip-minor-patch:
+      all-pip:
         patterns:
           - '*'
-        update-types:
-          - 'minor'
-          - 'patch'
     open-pull-requests-limit: 10
     cooldown:
       # Delay updates beyond the highest-risk window after a release.
