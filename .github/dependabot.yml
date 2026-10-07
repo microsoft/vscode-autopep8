@@ -1,0 +1,65 @@
+version: 2
+
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    labels:
+      - 'dependencies'
+      - 'debt'
+      - 'no-changelog'
+    groups:
+      npm-minor-patch:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
+    open-pull-requests-limit: 10
+    cooldown:
+      # Delay updates beyond the highest-risk window after a release.
+      default-days: 14
+    ignore:
+      - dependency-name: '@types/vscode'
+      - dependency-name: '@types/node'
+      - dependency-name: 'vscode-languageclient'
+
+  - package-ecosystem: 'pip'
+    directories:
+      - '/'
+      - '/src/test/python_tests'
+    schedule:
+      interval: 'weekly'
+    labels:
+      - 'dependencies'
+      - 'debt'
+      - 'no-changelog'
+    groups:
+      pip-minor-patch:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
+    open-pull-requests-limit: 10
+    cooldown:
+      # Delay updates beyond the highest-risk window after a release.
+      default-days: 14
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    labels:
+      - 'dependencies'
+      - 'debt'
+      - 'no-changelog'
+    groups:
+      all-actions:
+        patterns:
+          - '*'
+    open-pull-requests-limit: 10
+    cooldown:
+      # Delay updates beyond the highest-risk window after a release.
+      default-days: 14
