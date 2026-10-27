@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
     commands,
     ConfigurationScope,
@@ -16,8 +14,8 @@ import {
     workspace,
     WorkspaceConfiguration,
     WorkspaceFolder,
+    DocumentSelector,
 } from 'vscode';
-import { DocumentSelector } from 'vscode-languageclient';
 
 export function createOutputChannel(name: string): LogOutputChannel {
     return window.createOutputChannel(name, { log: true });
