@@ -8,4 +8,4 @@ pytest
 PyHamcrest
 python-jsonrpc-server
 colorama # required for windows machines
-ujson==5.13.0
+ujson==6.0.0
