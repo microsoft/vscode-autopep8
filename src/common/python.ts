@@ -146,14 +146,7 @@ type EnvironmentTools = KnownEnvironmentTools | string;
  * once tools have their own separate extensions.
  */
 type KnownEnvironmentTools =
-    | 'Conda'
-    | 'Pipenv'
-    | 'Poetry'
-    | 'VirtualEnv'
-    | 'Venv'
-    | 'VirtualEnvWrapper'
-    | 'Pyenv'
-    | 'Unknown';
+    'Conda' | 'Pipenv' | 'Poetry' | 'VirtualEnv' | 'Venv' | 'VirtualEnvWrapper' | 'Pyenv' | 'Unknown';
 
 /**
  * Type of the environment. It can be {@link KnownEnvironmentTypes} or custom string which was contributed.
