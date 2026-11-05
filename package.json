@@ -53,6 +53,7 @@
         "workspaceContains:.flake8"
     ],
     "main": "./dist/extension.js",
+    "l10n": "./l10n",
     "scripts": {
         "setup": "node ./build/setup.js",
         "setup:msft": "node ./build/setup-msft.js",
