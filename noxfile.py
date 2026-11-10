@@ -6,6 +6,7 @@ import json
 import os
 import pathlib
 import re
+import shutil
 import urllib.request as url_lib
 import zipfile
 from typing import List
@@ -14,6 +15,9 @@ import nox  # pylint: disable=import-error
 
 
 def _install_bundle(session: nox.Session) -> None:
+    bundle_dir = pathlib.Path("./bundled/libs")
+    if bundle_dir.exists():
+        shutil.rmtree(bundle_dir)
     session.install(
         "-t",
         "./bundled/libs",

@@ -7,3 +7,4 @@
 pygls<2 # bundled server uses the pygls 1.x API
 packaging
 autopep8
+typing-extensions>=4.14 # older versions fail to import on Python 3.15
