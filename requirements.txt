@@ -103,9 +103,10 @@ tomli==2.5.0 ; python_full_version < '3.11' \
     --hash=sha256:f79203b3965b4000e91808aaa7c040206093f2b8bf86f455982f2274c9ccf442 \
     --hash=sha256:fd4dc129784e0c5335bd4e61dfcc4487499a013419e655cf2da1d091b7e0efdc
     # via autopep8
-typing-extensions==4.16.0 ; python_full_version < '3.11' \
+typing-extensions==4.16.0 \
     --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8 \
     --hash=sha256:dc983d19a509c94dba722ee6abd33940f7c05a89e243c47e907eb4db6f1a43e5
     # via
+    #   -r ./requirements.in
     #   cattrs
     #   exceptiongroup
