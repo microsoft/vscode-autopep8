@@ -2,7 +2,7 @@
     "name": "autopep8",
     "displayName": "autopep8",
     "description": "%extension.description%",
-    "version": "2026.7.0-dev",
+    "version": "2026.6.0",
     "preview": true,
     "serverInfo": {
         "name": "autopep8",
