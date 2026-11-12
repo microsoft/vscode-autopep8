@@ -3,7 +3,7 @@
 # Use Python 3.10 as the minimum version when compiling.
 # Run following command:
 # uv pip compile --universal --python-version 3.10 --generate-hashes --upgrade -o ./src/test/python_tests/requirements.txt ./src/test/python_tests/requirements.in
-pygls<2 # match the bundled server's pygls 1.x API
+pygls<3 # match the bundled server's pygls 1.x API
 pytest
 PyHamcrest
 python-jsonrpc-server
