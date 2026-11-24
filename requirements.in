@@ -4,7 +4,7 @@
 #
 # Run following command:
 # uv pip compile --universal --python-version 3.10 --generate-hashes --upgrade -o .\requirements.txt .\requirements.in
-pygls<2 # bundled server uses the pygls 1.x API
+pygls<3 # bundled server uses the pygls 1.x API
 packaging
 autopep8
 typing-extensions>=4.14 # older versions fail to import on Python 3.15
