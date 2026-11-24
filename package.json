@@ -193,16 +193,16 @@
         "@types/fs-extra": "^11.0.4",
         "@types/node": "22.x",
         "@types/vscode": "^1.74.0",
-        "@typescript-eslint/eslint-plugin": "^8.72.1",
+        "@typescript-eslint/eslint-plugin": "^8.72.2",
         "@typescript-eslint/parser": "^8.65.0",
         "@vscode/test-electron": "^3.1.0",
-        "@vscode/vsce": "^4.0.0",
-        "eslint": "^10.13.0",
-        "glob": "^13.0.6",
+        "@vscode/vsce": "^4.1.0",
+        "eslint": "^10.14.0",
+        "glob": "^14.0.4",
         "prettier": "^3.9.10",
         "ts-loader": "^9.6.2",
-        "typescript": "6.0.3",
+        "typescript": "7.0.2",
         "webpack": "^5.112.2",
-        "webpack-cli": "^7.2.3"
+        "webpack-cli": "^7.3.1"
     }
 }
